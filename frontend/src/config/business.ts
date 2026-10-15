@@ -1,9 +1,4 @@
-/**
- * Public business details for the centre, taken from shivrajmaratha.com.
- *
- * Kept in one place so the footer, contact links and future "about" screens
- * cannot drift apart.
- */
+/** Public business details for the Shivaraj Maratha centre. */
 export const business = {
   name: 'शिवराज मराठा',
   nameEn: 'Shivaraj Maratha',

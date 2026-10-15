@@ -5,12 +5,8 @@ import { ErrorState } from '@/components/states/ErrorState'
 import { PreviewNotice } from '@/components/feedback/PreviewNotice'
 import { SectionHeading } from '@/components/ui/SectionHeading'
 import { AnnouncementsCard } from '@/features/dashboard/components/AnnouncementsCard'
-import { CompletionCard } from '@/features/dashboard/components/CompletionCard'
-import { ContactFooter } from '@/features/dashboard/components/ContactFooter'
 import { DashboardSkeleton } from '@/features/dashboard/components/DashboardSkeleton'
 import { HeroBanner } from '@/features/dashboard/components/HeroBanner'
-import { ProfileSummaryCard } from '@/features/dashboard/components/ProfileSummaryCard'
-import { PromoRail } from '@/features/dashboard/components/PromoRail'
 import { QuickAccessGrid } from '@/features/dashboard/components/QuickAccessGrid'
 import { SuccessStories } from '@/features/dashboard/components/SuccessStories'
 import { useDashboard } from '@/features/dashboard/hooks/useDashboard'
@@ -37,15 +33,8 @@ export function DashboardPage() {
     )
   }
 
-  const {
-    summary,
-    recommended,
-    recentlyAdded,
-    successStories,
-    announcements,
-    todayMatches,
-  } = state.data
-  const firstName = (user?.name ?? summary.name).split(' ')[0]
+  const { recommended, recentlyAdded, successStories, announcements } = state.data
+  const firstName = (user?.name ?? 'Member').split(' ')[0]
 
   return (
     <div className="space-y-6 px-4 pt-4 pb-6">
@@ -53,30 +42,13 @@ export function DashboardPage() {
 
       {isPreview ? <PreviewNotice /> : null}
 
-      {todayMatches > 0 ? (
-        <section aria-label="New matches">
-          <SectionHeading
-            title="Today's matches"
-            subtitle={`${todayMatches} new matches since your last visit`}
-          />
-          <PromoRail />
-        </section>
-      ) : null}
-
-      <ProfileSummaryCard summary={summary} />
-
-      <CompletionCard summary={summary} />
-
       <section aria-label="Quick access">
-        <SectionHeading title="Quick access" />
+        <SectionHeading title="Explore" />
         <QuickAccessGrid />
       </section>
 
       <section aria-label="Recommended profiles">
-        <SectionHeading
-          title="Recommended matches"
-          subtitle="Based on your preferences"
-        />
+        <SectionHeading title="New profiles" />
         {recommended.length > 0 ? (
           <ProfileCarousel profiles={recommended} />
         ) : (
@@ -103,13 +75,11 @@ export function DashboardPage() {
 
       {successStories.length > 0 ? <SuccessStories stories={successStories} /> : null}
 
-      {announcements.length > 0 ? (
+      {announcements.length > 0 && !isPreview ? (
         <section aria-label="Notifications">
           <AnnouncementsCard announcements={announcements} />
         </section>
       ) : null}
-
-      <ContactFooter />
     </div>
   )
 }

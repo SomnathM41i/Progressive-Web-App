@@ -26,12 +26,21 @@ export function ProfileCard({ profile, className }: ProfileCardProps) {
   return (
     <article
       className={cn(
-        'group relative w-40 shrink-0 overflow-hidden rounded-card border border-line bg-surface shadow-soft transition duration-200 hover:-translate-y-0.5 hover:shadow-card',
+        'group relative w-40 shrink-0 overflow-hidden rounded-xl border border-line bg-surface shadow-soft transition duration-200 hover:-translate-y-0.5 hover:shadow-card',
         className,
       )}
     >
-      <div className="relative flex h-32 items-center justify-center bg-gradient-to-br from-rose to-rose-dark">
-        <Avatar src={profile.photoUrl} name={profile.name} size="xl" />
+      <div className="relative flex h-40 items-center justify-center bg-gradient-to-br from-rose to-rose-dark">
+        {profile.photoUrl ? (
+          <img
+            src={profile.photoUrl}
+            alt=""
+            loading="lazy"
+            className="size-full object-cover object-center"
+          />
+        ) : (
+          <Avatar name={profile.name} size="xl" />
+        )}
 
         {profile.isNew ? (
           <span className="absolute top-2 left-2 rounded-full bg-maroon px-2 py-0.5 text-2xs font-bold text-white shadow-sm">

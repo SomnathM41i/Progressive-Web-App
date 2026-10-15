@@ -11,6 +11,7 @@ export interface ProfilePreview {
   age: number
   location: string
   occupation?: string
+  gender?: 'Bride' | 'Groom'
   /** Absent or null renders the branded monogram avatar. */
   photoUrl?: string | null
   /** Only rendered when the backend explicitly confirms verification. */

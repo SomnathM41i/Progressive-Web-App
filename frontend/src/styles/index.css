@@ -1,6 +1,48 @@
 @import 'tailwindcss';
 @import './tokens.css';
 
+.welcome-screen {
+  min-height: 100dvh;
+  background:
+    radial-gradient(ellipse at 8% 10%, rgba(222, 179, 138, 0.18), transparent 26%),
+    radial-gradient(ellipse at 94% 82%, rgba(217, 143, 155, 0.15), transparent 28%),
+    #fffdfa;
+}
+
+.welcome-flower {
+  position: absolute;
+  color: #d9b783;
+  opacity: 0.25;
+  font-size: 9rem;
+  line-height: 1;
+  pointer-events: none;
+}
+.welcome-flower-top {
+  top: 2%;
+  left: -3.5rem;
+  transform: rotate(-28deg);
+}
+.welcome-hands {
+  width: min(90vw, 25rem);
+  height: clamp(9rem, 30vh, 15rem);
+  margin-top: 1.2rem;
+  border-radius: 1.25rem;
+  background:
+    linear-gradient(0deg, rgba(255, 253, 250, 0.06), rgba(255, 253, 250, 0.06)),
+    url('https://images.unsplash.com/photo-1516589178581-6cd7833ae3b2?auto=format&fit=crop&w=1000&q=85')
+      center 44% / cover;
+  box-shadow: 0 12px 32px rgba(70, 35, 40, 0.12);
+}
+
+@media (min-width: 640px) {
+  .welcome-screen {
+    max-width: 32rem;
+    margin-inline: auto;
+    border-radius: 1.5rem;
+    box-shadow: 0 16px 60px rgba(55, 34, 38, 0.12);
+  }
+}
+
 /* Safe-area helpers. Mobile browsers report these insets so the app can avoid
  * the notch, the home indicator and the rounded corners. */
 @utility pt-safe {

@@ -1,21 +1,20 @@
 import type { DashboardData } from '@/features/dashboard/types'
 
-/**
- * DEVELOPMENT ONLY.
- *
- * Placeholder dashboard content used when `VITE_ENABLE_DEV_PREVIEW` is on. It
- * exists purely so the layout can be reviewed before the API collection is
- * integrated, and it is never reachable from a production build.
- *
- * Photos are intentionally omitted: the monogram avatar is a real, designed
- * state, whereas stock portraits would look like genuine member data.
- */
+const portraits = {
+  man: 'https://images.unsplash.com/photo-1500649767791-00dcc994a43e?auto=format&fit=crop&w=640&h=760&q=85',
+  woman:
+    'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=640&h=760&q=85',
+  womanTwo:
+    'https://images.unsplash.com/photo-1531123897727-8f129e1688ce?auto=format&fit=crop&w=640&h=760&q=85',
+}
+
+/** Preview-only sample data; member records are loaded from the API in production. */
 export const PREVIEW_DASHBOARD: DashboardData = {
   summary: {
     name: 'सोमनाथ माळी',
     profileId: 'SM008656',
     completion: 68,
-    photoUrl: null,
+    photoUrl: portraits.man,
     isVerified: true,
     missingFields: ['Education details', 'Family details', 'Photo'],
   },
@@ -25,8 +24,9 @@ export const PREVIEW_DASHBOARD: DashboardData = {
       name: 'स्नेहा पाटील',
       age: 27,
       location: 'सातारा',
-      occupation: 'शिक्षिका',
-      photoUrl: null,
+      occupation: 'Teacher',
+      gender: 'Bride',
+      photoUrl: portraits.woman,
       isVerified: true,
     },
     {
@@ -34,8 +34,9 @@ export const PREVIEW_DASHBOARD: DashboardData = {
       name: 'प्रिया जाधव',
       age: 25,
       location: 'पुणे',
-      occupation: 'सॉफ्टवेअर इंजिनिअर',
-      photoUrl: null,
+      occupation: 'Software engineer',
+      gender: 'Bride',
+      photoUrl: portraits.womanTwo,
       isVerified: false,
     },
     {
@@ -43,8 +44,10 @@ export const PREVIEW_DASHBOARD: DashboardData = {
       name: 'अनिता देशमुख',
       age: 29,
       location: 'कोल्हापूर',
-      occupation: 'नर्स',
-      photoUrl: null,
+      occupation: 'Nurse',
+      gender: 'Bride',
+      photoUrl:
+        'https://images.unsplash.com/photo-1524504388940-b1c1722653e1?auto=format&fit=crop&w=640&h=760&q=85',
       isVerified: true,
     },
   ],
@@ -54,8 +57,9 @@ export const PREVIEW_DASHBOARD: DashboardData = {
       name: 'राहुल शिंदे',
       age: 31,
       location: 'मुंबई',
-      occupation: 'व्यापार',
-      photoUrl: null,
+      occupation: 'Business',
+      gender: 'Groom',
+      photoUrl: portraits.man,
       isVerified: true,
       isNew: true,
     },
@@ -64,8 +68,10 @@ export const PREVIEW_DASHBOARD: DashboardData = {
       name: 'अमोल कुलकर्णी',
       age: 28,
       location: 'नाशिक',
-      occupation: 'अभियंता',
-      photoUrl: null,
+      occupation: 'Engineer',
+      gender: 'Groom',
+      photoUrl:
+        'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?auto=format&fit=crop&w=640&h=760&q=85',
       isNew: true,
     },
   ],
@@ -75,28 +81,28 @@ export const PREVIEW_DASHBOARD: DashboardData = {
       couple: 'स्नेहा आणि राहुल',
       place: 'सातारा',
       year: 2024,
-      quote: 'विश्वासार्ह माहिती आणि चांगले स्थळ यामुळे योग्य जोडी लवकर भेटली.',
+      quote: 'विश्वासार्ह माहिती आणि चांगल्या स्थळांमुळे योग्य जोडी लवकर भेटली.',
     },
     {
       id: 's-2',
       couple: 'प्रिया आणि अमोल',
       place: 'कोल्हापूर',
       year: 2023,
-      quote: 'कुटुंबासोबत चर्चा करून निर्णय घेणं सोपं झालं.',
+      quote: 'कुटुंबासोबत चर्चा करून निर्णय घेणे सोपे झाले.',
     },
   ],
   announcements: [
     {
       id: 'a-1',
-      title: 'प्रोफाइल अपूर्ण आहे',
-      body: 'पूर्ण प्रोफाइलला जास्त प्रतिसाद मिळतो. उर्वरित तपशील भरा.',
+      title: 'Complete your profile',
+      body: 'Complete profiles receive more responses. Add your education and family details.',
       createdAt: '2026-10-12T09:00:00.000Z',
       tone: 'warning',
     },
     {
       id: 'a-2',
-      title: 'नवीन स्थळे उपलब्ध',
-      body: 'या आठवड्यात 24 नवीन प्रोफाइल जोडली गेली आहेत.',
+      title: 'New matches available',
+      body: '24 new profiles were added this week.',
       createdAt: '2026-10-10T09:00:00.000Z',
       tone: 'info',
     },

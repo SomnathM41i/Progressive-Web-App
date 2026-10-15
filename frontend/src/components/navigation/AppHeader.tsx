@@ -1,4 +1,4 @@
-import { Bell } from 'lucide-react'
+import { Bell, Menu, X } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { Link, NavLink } from 'react-router-dom'
 
@@ -16,18 +16,10 @@ const desktopNavItems = [
   { label: 'Messages', to: routes.chat, end: false },
 ]
 
-/**
- * Top bar for the authenticated app.
- *
- * Shows the brand, a notifications shortcut and the member's avatar. From the
- * `md` breakpoint it also carries inline navigation, since the bottom tab bar
- * is hidden there. It picks up a soft shadow once the page scrolls, the way an
- * app bar separates from content underneath it.
- */
 export function AppHeader() {
   const { user } = useAuth()
   const [scrolled, setScrolled] = useState(false)
-
+  const [menuOpen, setMenuOpen] = useState(false)
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 4)
     onScroll()
@@ -38,32 +30,35 @@ export function AppHeader() {
   return (
     <header
       className={cn(
-        'sticky top-0 z-30 border-b border-line bg-cream/92 pt-safe backdrop-blur-md transition-shadow duration-200',
+        'sticky top-0 z-30 border-b border-line bg-cream/95 pt-safe backdrop-blur-md transition-shadow duration-200',
         scrolled ? 'shadow-bar' : 'shadow-none',
       )}
     >
-      <div className="mx-auto flex h-15 max-w-lg items-center justify-between gap-3 px-4 md:max-w-2xl">
-        <div className="flex min-w-0 items-center gap-1.5">
-          <Link
-            to={routes.home}
-            className="flex min-w-0 items-center gap-2.5 transition-transform active:scale-95"
-          >
-            <img
-              src={logo}
-              alt=""
-              width={36}
-              height={36}
-              className="size-9 shrink-0 object-contain"
-            />
-            <span className="flex min-w-0 flex-col leading-tight">
-              <span className="truncate text-sm font-bold text-maroon">
-                शिवराज मराठा
-              </span>
-              <span className="truncate text-2xs text-muted">वधू वर सूचक केंद्र</span>
-            </span>
-          </Link>
-        </div>
-
+      <div className="relative mx-auto flex h-15 max-w-lg items-center justify-between gap-2 px-3 md:max-w-2xl md:px-4">
+        <button
+          aria-label={menuOpen ? 'Close menu' : 'Open menu'}
+          aria-expanded={menuOpen}
+          onClick={() => setMenuOpen(!menuOpen)}
+          className="flex size-9 items-center justify-center rounded-full text-maroon md:hidden"
+        >
+          {menuOpen ? <X className="size-5" /> : <Menu className="size-5" />}
+        </button>
+        <Link
+          to={routes.home}
+          className="absolute left-1/2 flex min-w-0 -translate-x-1/2 items-center gap-2 transition-transform active:scale-95 md:static md:translate-x-0"
+        >
+          <img
+            src={logo}
+            alt=""
+            width={36}
+            height={36}
+            className="size-9 shrink-0 object-contain"
+          />
+          <span className="flex min-w-0 flex-col text-center leading-tight md:text-left">
+            <span className="truncate text-sm font-bold text-maroon">शिवराज मराठा</span>
+            <span className="truncate text-2xs text-muted">वधू वर सूचक केंद्र</span>
+          </span>
+        </Link>
         <nav aria-label="Primary" className="hidden items-center gap-1 md:flex">
           {desktopNavItems.map(({ label, to, end }) => (
             <NavLink
@@ -83,12 +78,10 @@ export function AppHeader() {
             </NavLink>
           ))}
         </nav>
-
         <div className="flex shrink-0 items-center gap-1.5">
           <IconLink label="Notifications" to={routes.notifications} size="sm">
             <Bell className="size-4.5" aria-hidden="true" />
           </IconLink>
-
           <Link
             to={routes.profile}
             aria-label="Profile"
@@ -97,6 +90,27 @@ export function AppHeader() {
             <Avatar src={user?.avatarUrl} name={user?.name ?? 'Member'} size="sm" />
           </Link>
         </div>
+        {menuOpen ? (
+          <nav
+            aria-label="Mobile menu"
+            className="absolute top-full left-2 z-50 mt-2 flex w-52 flex-col rounded-2xl border border-line bg-white p-2 shadow-lift md:hidden"
+          >
+            {[
+              ...desktopNavItems,
+              { label: 'Interests', to: routes.interests, end: false },
+              { label: 'Premium membership', to: routes.membership, end: false },
+            ].map(({ label, to }) => (
+              <Link
+                key={to}
+                to={to}
+                onClick={() => setMenuOpen(false)}
+                className="rounded-xl px-3 py-3 text-sm font-medium text-ink hover:bg-rose"
+              >
+                {label}
+              </Link>
+            ))}
+          </nav>
+        ) : null}
       </div>
     </header>
   )

@@ -1,4 +1,4 @@
-import { ArrowRight, ShieldCheck, Sparkles, Users } from 'lucide-react'
+import { ArrowRight, Heart, ShieldCheck, Users } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 
 import logo from '@/assets/images/shivraj-logo.png'
@@ -8,33 +8,21 @@ import { useAuth } from '@/features/auth/hooks/useAuth'
 import { useToast } from '@/hooks/useToast'
 import { env } from '@/config/env'
 
-const TAGLINE = 'योग्य नात्यांची विश्वासार्ह सुरुवात'
-
-const trustPoints = [
-  { icon: ShieldCheck, label: 'सत्यापित प्रोफाइल' },
-  { icon: Users, label: 'फक्त मराठा समाज' },
-  { icon: Sparkles, label: '2013 पासून विश्वासार्ह' },
-]
-
 export function WelcomePage() {
   const navigate = useNavigate()
   const toast = useToast()
   const { login } = useAuth()
-
   async function handlePreview() {
     await login({ identifier: 'preview', password: 'preview' })
     toast.success('Preview mode started')
     void navigate(routes.home, { replace: true })
   }
-
   return (
-    <div className="flex flex-1 flex-col px-6 pt-safe pb-safe">
-      <div className="relative flex flex-1 flex-col items-center justify-center py-10 text-center">
-        <span
-          aria-hidden="true"
-          className="pointer-events-none absolute top-4 left-1/2 size-64 -translate-x-1/2 rounded-full bg-gradient-to-b from-maroon/12 to-transparent blur-3xl"
-        />
-
+    <div className="welcome-screen flex flex-1 flex-col px-6 pt-safe pb-safe">
+      <div className="relative flex flex-1 flex-col items-center justify-center py-8 text-center">
+        <div className="welcome-flower welcome-flower-top" aria-hidden="true">
+          ✿
+        </div>
         <img
           src={logo}
           alt="Shivaraj Maratha"
@@ -42,51 +30,50 @@ export function WelcomePage() {
           height={112}
           className="relative size-28 object-contain sm:size-32"
         />
-
-        <h1 className="relative mt-5 text-3xl text-maroon">शिवराज मराठा</h1>
-        <p className="relative mt-1 text-2xs font-semibold tracking-[0.16em] text-maroon/80 uppercase">
-          वधू वर सूचक केंद्र ®
+        <h1 className="relative mt-3 text-3xl text-maroon">शिवराज मराठा</h1>
+        <p className="relative mt-1 text-2xs font-semibold tracking-[0.22em] text-maroon/80 uppercase">
+          वधू वर सूचक केंद्र
         </p>
-
-        <p className="relative mt-6 max-w-sm text-base leading-relaxed text-ink">
-          {TAGLINE}
+        <p
+          className="relative mt-6 max-w-sm text-base leading-relaxed text-ink"
+          lang="mr"
+        >
+          योग्य नात्यांची विश्वासार्ह सुरुवात
         </p>
-        <p className="relative mt-3 max-w-sm text-xs leading-relaxed text-muted">
-          मराठा समाजातील वधू-वरांसाठी सन्माननीय, सुरक्षित आणि विश्वासार्ह विवाह माध्यम.
-        </p>
-
-        <ul className="relative mt-8 flex flex-wrap justify-center gap-2">
-          {trustPoints.map(({ icon: Icon, label }) => (
-            <li
+        <div className="welcome-hands" aria-hidden="true" />
+        <div className="mt-auto grid w-full max-w-sm grid-cols-3 gap-2 pt-5 text-center">
+          {[
+            { icon: ShieldCheck, label: 'Verified profiles' },
+            { icon: Heart, label: 'Meaningful matches' },
+            { icon: Users, label: 'Trusted community' },
+          ].map(({ icon: Icon, label }) => (
+            <div
               key={label}
-              className="flex items-center gap-1.5 rounded-full border border-line bg-surface/70 px-3 py-1.5 text-2xs font-semibold text-muted"
+              className="flex flex-col items-center gap-1.5 rounded-xl bg-white/80 px-2 py-3 text-2xs font-medium text-muted"
             >
-              <Icon className="size-3.5 text-maroon" aria-hidden="true" />
+              <Icon className="size-5 text-maroon" />
               {label}
-            </li>
+            </div>
           ))}
-        </ul>
+        </div>
       </div>
-
-      <div className="space-y-3 pb-6">
+      <div className="mx-auto w-full max-w-sm space-y-3 pb-6">
         <Button
           fullWidth
           size="lg"
           trailingIcon={<ArrowRight className="size-4" aria-hidden="true" />}
-          onClick={() => void navigate(routes.login)}
+          onClick={() => void navigate(routes.register)}
         >
-          Login
+          Create an account
         </Button>
-
         <Button
           fullWidth
           size="lg"
           variant="outline"
-          onClick={() => void navigate(routes.register)}
+          onClick={() => void navigate(routes.login)}
         >
-          Register
+          Log in
         </Button>
-
         {env.devPreview ? (
           <Button
             fullWidth
@@ -94,7 +81,7 @@ export function WelcomePage() {
             variant="ghost"
             onClick={() => void handlePreview()}
           >
-            Dashboard preview (development)
+            Open preview
           </Button>
         ) : null}
       </div>
