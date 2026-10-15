@@ -1,0 +1,67 @@
+# Apache config for the Shivaraj Maratha PWA on shared hosting.
+# Vite copies everything in this folder to the build root, so this file ships
+# as <docroot>/.htaccess next to index.html. No build step on the server.
+
+<IfModule mod_rewrite.c>
+  RewriteEngine On
+
+  # --- Force HTTPS (Hostinger issues a free SSL certificate). -------------
+  # Comment this block out if the domain has no certificate yet.
+  RewriteCond %{HTTPS} !=on
+  RewriteRule ^ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
+
+  # --- Leave the Laravel backend under /api to its own handling ----------
+  # (public_html/api/ ships the Laravel public/ files with their own
+  # .htaccess.) Without this the SPA fallback below would swallow /api.
+  RewriteRule ^api(/.*)?$ - [L]
+
+  # --- Serve real files and folders as-is --------------------------------
+  RewriteCond %{REQUEST_FILENAME} -f [OR]
+  RewriteCond %{REQUEST_FILENAME} -d
+  RewriteRule ^ - [L]
+
+  # --- Single Page App fallback ------------------------------------------
+  # Any other path (e.g. /login, /profile/basic) is handled by the client
+  # router, so hand it index.html.
+  RewriteRule ^ index.html [L]
+</IfModule>
+
+# --- Compression ---------------------------------------------------------
+<IfModule mod_deflate.c>
+  AddOutputFilterByType DEFLATE text/html text/plain text/css text/xml
+  AddOutputFilterByType DEFLATE application/javascript application/json
+  AddOutputFilterByType DEFLATE application/manifest+json image/svg+xml
+</IfModule>
+
+# --- Caching -------------------------------------------------------------
+<IfModule mod_headers.c>
+  # The service worker and manifest must always be revalidated, otherwise
+  # updates never reach installed clients.
+  <FilesMatch "^(sw\.js|manifest\.webmanifest)$">
+    Header set Cache-Control "no-cache, must-revalidate"
+  </FilesMatch>
+
+  # Vite build output carries a content hash in the filename (name-<hash>.js),
+  # so it is safe to cache forever.
+  <FilesMatch "-[A-Za-z0-9_-]{8}\.(js|css)$">
+    Header set Cache-Control "public, max-age=31536000, immutable"
+  </FilesMatch>
+
+  # Stable static assets (icons, fonts, images).
+  <FilesMatch "\.(png|jpe?g|gif|svg|ico|webp|woff2?)$">
+    Header set Cache-Control "public, max-age=604800"
+  </FilesMatch>
+
+  # Baseline security headers.
+  Header set X-Content-Type-Options "nosniff"
+  Header set X-Frame-Options "SAMEORIGIN"
+  Header set Referrer-Policy "strict-origin-when-cross-origin"
+</IfModule>
+
+# --- Misc ----------------------------------------------------------------
+<IfModule mod_mime.c>
+  AddType application/manifest+json .webmanifest
+</IfModule>
+
+# Do not let the directory listing expose anything.
+Options -Indexes

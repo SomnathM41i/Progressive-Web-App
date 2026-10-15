@@ -1,4 +1,4 @@
-import { ChevronLeft, Info, Lock, Phone } from 'lucide-react'
+import { ChevronLeft, Lock, Phone } from 'lucide-react'
 import { useState } from 'react'
 import type { FormEvent } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
@@ -29,7 +29,6 @@ export function LoginPage() {
       toast.success('Logged in successfully')
       void navigate(routes.home, { replace: true })
     } catch (error) {
-      // The API is not wired up yet, so this is the expected outcome today.
       const apiError = toApiError(error)
       toast.error('Could not log in', { description: apiError.message })
     } finally {
@@ -54,17 +53,6 @@ export function LoginPage() {
         <p className="mt-1.5 text-sm text-muted">
           Log in to your account and find suitable matches.
         </p>
-
-        <div
-          role="note"
-          className="mt-6 flex gap-2.5 rounded-md border border-dashed border-gold/40 bg-gold/8 p-3 text-2xs leading-relaxed text-gold"
-        >
-          <Info className="mt-0.5 size-4 shrink-0" aria-hidden="true" />
-          <span>
-            <strong className="font-semibold">Authentication is not connected.</strong> This
-            form will work once your API collection is connected to the backend.
-          </span>
-        </div>
 
         <form className="mt-6 space-y-4" onSubmit={handleSubmit} noValidate>
           <TextField

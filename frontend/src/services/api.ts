@@ -6,12 +6,18 @@ import { toApiError } from '@/services/api-error'
 /**
  * Centralised HTTP client.
  *
- * Every feature service goes through this instance, so base URL, timeout,
- * credentials and error normalisation are configured exactly once.
+ * Every feature service goes through this instance, so base URL, timeout and
+ * error normalisation are configured exactly once.
+ *
+ * The APIs live on a separate origin (shivrajmaratha.com) and answer with
+ * `Access-Control-Allow-Origin: *`, which is incompatible with credentialed
+ * requests — so cookies are not used and `withCredentials` stays off. Only
+ * CORS-safelisted headers are sent (`Accept`, form-encoded `Content-Type`) so a
+ * browser can POST without triggering a preflight the API does not answer.
  *
  * Authentication is deliberately not baked in. The auth feature registers a
- * token provider and an unauthorised handler once the API collection is
- * integrated, which keeps this module free of auth imports.
+ * token provider and an unauthorised handler, which keeps this module free of
+ * auth imports.
  */
 
 type TokenProvider = () => string | null
@@ -31,10 +37,9 @@ export function setUnauthorizedHandler(handler: UnauthorizedHandler | null): voi
 export const api: AxiosInstance = axios.create({
   baseURL: env.apiBaseUrl,
   timeout: env.apiTimeout,
-  withCredentials: true,
+  withCredentials: false,
   headers: {
     Accept: 'application/json',
-    'X-Requested-With': 'XMLHttpRequest',
   },
 })
 

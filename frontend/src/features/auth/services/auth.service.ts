@@ -1,66 +1,87 @@
 import { env } from '@/config/env'
-import {
-  PREVIEW_SESSION,
-  PREVIEW_SESSION_KEY,
-} from '@/features/auth/dev/preview-session'
 import type {
   AuthService,
   AuthSession,
   LoginCredentials,
 } from '@/features/auth/types'
 import { sessionStore } from '@/lib/storage'
-import { ApiNotIntegratedError } from '@/services/api-error'
+import { api } from '@/services/api'
+import { ApiError } from '@/services/api-error'
 
 /**
- * Real implementation.
+ * Real authentication against the PHP API (`{VITE_API_BASE_URL}/login.php`).
  *
- * The API collection is not available yet, so restoring a session always
- * resolves to "signed out" and signing in fails loudly. It deliberately does
- * not fabricate a successful login.
- *
- * When the collection is ready, replace the bodies with calls through the
- * shared `api` client. The surrounding app does not need to change.
+ * The API answers with `{ status, message, data }` and uses HTTP 200 even for
+ * failures, so success is decided by the `status` field rather than the status
+ * code. The session is held client-side: the API sets no usable cookie for a
+ * cross-origin SPA and returns no token, so the signed-in user is persisted in
+ * sessionStorage and cleared on sign-out.
  */
-const unconfiguredAuthService: AuthService = {
+
+const SESSION_KEY = 'shivaraj.session'
+
+interface LoginResponse {
+  status: 'success' | 'error'
+  message: string
+  data?: {
+    MatriID: string
+    Name: string
+    Email?: string | null
+    Mobile?: string | null
+  }
+}
+
+function persist(session: AuthSession | null): void {
+  if (session) {
+    sessionStore.write(SESSION_KEY, JSON.stringify(session))
+  } else {
+    sessionStore.remove(SESSION_KEY)
+  }
+}
+
+const authServiceImpl: AuthService = {
   async restoreSession(): Promise<AuthSession | null> {
-    // TODO(api): GET the current session and map the response to AuthSession.
-    return null
+    const raw = sessionStore.read(SESSION_KEY)
+    if (!raw) return null
+
+    try {
+      return JSON.parse(raw) as AuthSession
+    } catch {
+      sessionStore.remove(SESSION_KEY)
+      return null
+    }
   },
 
-  async login(_credentials: LoginCredentials): Promise<AuthSession> {
-    throw new ApiNotIntegratedError('Sign in')
+  async login({ identifier, password }: LoginCredentials): Promise<AuthSession> {
+    const body = new URLSearchParams({ username: identifier, password })
+    const { data } = await api.post<LoginResponse>('/login.php', body)
+
+    if (data.status !== 'success' || !data.data) {
+      throw new ApiError({
+        message: data.message || 'Invalid username or password',
+      })
+    }
+
+    const session: AuthSession = {
+      user: {
+        id: data.data.MatriID,
+        name: data.data.Name,
+        profileId: data.data.MatriID,
+        email: data.data.Email ?? null,
+        phone: data.data.Mobile ?? null,
+      },
+    }
+
+    persist(session)
+    return session
   },
 
   async logout(): Promise<void> {
-    // TODO(api): POST to the logout endpoint and clear any stored token.
+    persist(null)
   },
 }
 
-/**
- * Development-only implementation.
- *
- * Lets the authenticated experience be reviewed without a backend. The session
- * is kept in sessionStorage so signing out survives a refresh, which makes the
- * unauthenticated screens easy to check too.
- */
-const previewAuthService: AuthService = {
-  async restoreSession(): Promise<AuthSession | null> {
-    return sessionStore.read(PREVIEW_SESSION_KEY) ? PREVIEW_SESSION : null
-  },
+export const authService: AuthService = authServiceImpl
 
-  async login(): Promise<AuthSession> {
-    sessionStore.write(PREVIEW_SESSION_KEY, '1')
-    return PREVIEW_SESSION
-  },
-
-  async logout(): Promise<void> {
-    sessionStore.remove(PREVIEW_SESSION_KEY)
-  },
-}
-
-export const authService: AuthService = env.devPreview
-  ? previewAuthService
-  : unconfiguredAuthService
-
-/** True when the running build is using the development preview session. */
+/** True when the running build is using development placeholder data. */
 export const isPreviewAuth = env.devPreview
