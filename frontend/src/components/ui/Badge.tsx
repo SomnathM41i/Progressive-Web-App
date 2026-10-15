@@ -2,11 +2,11 @@ import type { ReactNode } from 'react'
 
 import { cn } from '@/lib/cn'
 
-type Tone = 'neutral' | 'gold' | 'success' | 'warning' | 'danger' | 'info'
+type Tone = 'neutral' | 'brand' | 'success' | 'warning' | 'danger' | 'info'
 
 const tones: Record<Tone, string> = {
-  neutral: 'bg-maroon/8 text-maroon',
-  gold: 'bg-gold/15 text-gold',
+  neutral: 'bg-cream-dark text-muted',
+  brand: 'bg-rose text-maroon',
   success: 'bg-success-soft text-success',
   warning: 'bg-warning-soft text-warning',
   danger: 'bg-danger-soft text-danger',

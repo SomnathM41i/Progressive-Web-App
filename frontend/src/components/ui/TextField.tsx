@@ -31,11 +31,11 @@ export function TextField({
 
       <div
         className={cn(
-          'flex items-center gap-2 rounded-md border bg-surface px-3 transition',
-          'focus-within:ring-2 focus-within:ring-saffron/25',
+          'flex items-center gap-2 rounded-lg border bg-surface px-3 transition',
+          'focus-within:ring-2 focus-within:ring-maroon/15',
           error
             ? 'border-danger/50 focus-within:border-danger'
-            : 'border-line-strong focus-within:border-saffron',
+            : 'border-line-strong focus-within:border-maroon',
         )}
       >
         {leadingIcon ? (

@@ -32,7 +32,7 @@ export function WelcomePage() {
       <div className="relative flex flex-1 flex-col items-center justify-center py-10 text-center">
         <span
           aria-hidden="true"
-          className="pointer-events-none absolute top-4 left-1/2 size-64 -translate-x-1/2 rounded-full bg-gradient-to-b from-gold/20 to-transparent blur-3xl"
+          className="pointer-events-none absolute top-4 left-1/2 size-64 -translate-x-1/2 rounded-full bg-gradient-to-b from-maroon/12 to-transparent blur-3xl"
         />
 
         <img
@@ -44,7 +44,7 @@ export function WelcomePage() {
         />
 
         <h1 className="relative mt-5 text-3xl text-maroon">शिवराज मराठा</h1>
-        <p className="relative mt-1 text-2xs font-semibold tracking-[0.16em] text-gold uppercase">
+        <p className="relative mt-1 text-2xs font-semibold tracking-[0.16em] text-maroon/80 uppercase">
           वधू वर सूचक केंद्र ®
         </p>
 
@@ -52,8 +52,7 @@ export function WelcomePage() {
           {TAGLINE}
         </p>
         <p className="relative mt-3 max-w-sm text-xs leading-relaxed text-muted">
-          मराठा समाजातील वधू-वरांसाठी सन्माननीय, सुरक्षित आणि विश्वासार्ह विवाह
-          माध्यम.
+          मराठा समाजातील वधू-वरांसाठी सन्माननीय, सुरक्षित आणि विश्वासार्ह विवाह माध्यम.
         </p>
 
         <ul className="relative mt-8 flex flex-wrap justify-center gap-2">
@@ -62,7 +61,7 @@ export function WelcomePage() {
               key={label}
               className="flex items-center gap-1.5 rounded-full border border-line bg-surface/70 px-3 py-1.5 text-2xs font-semibold text-muted"
             >
-              <Icon className="size-3.5 text-gold" aria-hidden="true" />
+              <Icon className="size-3.5 text-maroon" aria-hidden="true" />
               {label}
             </li>
           ))}
@@ -79,12 +78,22 @@ export function WelcomePage() {
           Login
         </Button>
 
-        <Button fullWidth size="lg" variant="outline" onClick={() => void navigate(routes.register)}>
+        <Button
+          fullWidth
+          size="lg"
+          variant="outline"
+          onClick={() => void navigate(routes.register)}
+        >
           Register
         </Button>
 
         {env.devPreview ? (
-          <Button fullWidth size="sm" variant="ghost" onClick={() => void handlePreview()}>
+          <Button
+            fullWidth
+            size="sm"
+            variant="ghost"
+            onClick={() => void handlePreview()}
+          >
             Dashboard preview (development)
           </Button>
         ) : null}

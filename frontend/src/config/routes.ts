@@ -11,9 +11,12 @@ export const routes = {
   home: '/home',
   search: '/search',
   shortlist: '/shortlist',
+  interests: '/interests',
+  chat: '/chat',
   notifications: '/notifications',
   profile: '/profile',
   profileEdit: '/profile/edit',
+  profileDetail: '/profiles/:profileId',
 
   membership: '/membership',
   browse: '/browse',
@@ -21,3 +24,8 @@ export const routes = {
 } as const
 
 export type RoutePath = (typeof routes)[keyof typeof routes]
+
+/** Builds a concrete profile-detail path from a profile id. */
+export function profilePath(profileId: string): string {
+  return `/profiles/${encodeURIComponent(profileId)}`
+}

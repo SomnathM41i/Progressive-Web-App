@@ -17,7 +17,7 @@ export function RegisterPage() {
         <Link
           to={routes.welcome}
           aria-label="Back"
-          className="-ml-2 flex size-9 items-center justify-center rounded-full text-maroon transition hover:bg-maroon/6"
+          className="-ml-2 flex size-9 items-center justify-center rounded-full text-maroon transition hover:bg-rose"
         >
           <ChevronLeft className="size-5" aria-hidden="true" />
         </Link>
@@ -30,7 +30,7 @@ export function RegisterPage() {
         </p>
 
         <Card className="mt-6 flex items-start gap-3">
-          <span className="flex size-10 shrink-0 items-center justify-center rounded-full bg-gold/12 text-gold">
+          <span className="flex size-10 shrink-0 items-center justify-center rounded-full bg-rose text-maroon">
             <UserPlus className="size-5" aria-hidden="true" />
           </span>
           <div>
@@ -38,8 +38,8 @@ export function RegisterPage() {
               Registration form coming soon
             </p>
             <p className="mt-1 text-xs leading-relaxed text-muted">
-              The registration form is not part of this version. Multi-step
-              registration will run here once the API collection is connected.
+              The registration form is not part of this version. Multi-step registration
+              will run here once the API collection is connected.
             </p>
           </div>
         </Card>

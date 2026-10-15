@@ -60,8 +60,13 @@
   }
 
   :focus-visible {
-    outline: 2px solid var(--color-saffron);
+    outline: 2px solid var(--color-maroon);
     outline-offset: 2px;
+  }
+
+  ::selection {
+    background-color: var(--color-rose);
+    color: var(--color-maroon-dark);
   }
 
   ::-webkit-scrollbar {
@@ -70,7 +75,7 @@
   }
 
   ::-webkit-scrollbar-thumb {
-    background: rgba(107, 26, 26, 0.2);
+    background: rgba(153, 13, 50, 0.2);
     border-radius: 999px;
   }
 }

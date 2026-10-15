@@ -28,7 +28,7 @@ export function ProfileSummaryCard({ summary }: ProfileSummaryCardProps) {
       {/* Decorative brand flourish. */}
       <span
         aria-hidden="true"
-        className="pointer-events-none absolute -top-10 -right-8 size-36 rounded-full bg-gold/15 blur-2xl"
+        className="pointer-events-none absolute -top-10 -right-8 size-36 rounded-full bg-rose/15 blur-2xl"
       />
 
       <div className="relative flex items-start gap-4">
@@ -36,14 +36,14 @@ export function ProfileSummaryCard({ summary }: ProfileSummaryCardProps) {
           src={summary.photoUrl}
           name={summary.name}
           size="lg"
-          className="ring-gold/40"
+          className="ring-white/25"
         />
 
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center gap-2">
-            <h2 className="truncate text-lg text-white">{summary.name}</h2>
+            <h2 className="truncate font-display text-lg text-white">{summary.name}</h2>
             {summary.isVerified === true ? (
-              <Badge tone="gold" icon={<BadgeCheck className="size-3.5" />}>
+              <Badge tone="brand" icon={<BadgeCheck className="size-3.5" />}>
                 Verified
               </Badge>
             ) : null}
@@ -56,13 +56,11 @@ export function ProfileSummaryCard({ summary }: ProfileSummaryCardProps) {
           <div className="mt-3">
             <div className="mb-1.5 flex items-center justify-between text-2xs text-white/75">
               <span>Profile completion</span>
-              <span className="font-semibold text-gold-light">
-                {summary.completion}%
-              </span>
+              <span className="font-semibold text-white">{summary.completion}%</span>
             </div>
             <ProgressBar
               value={summary.completion}
-              tone="gold"
+              tone="onDark"
               label="Profile completion"
               className="bg-white/15"
             />
@@ -79,7 +77,7 @@ export function ProfileSummaryCard({ summary }: ProfileSummaryCardProps) {
 
         <Link
           to={routes.profileEdit}
-          className="inline-flex shrink-0 items-center gap-1.5 rounded-full bg-gradient-to-br from-gold to-gold-light px-3.5 py-2 text-2xs font-bold text-maroon-dark shadow-gold transition hover:brightness-105 active:scale-95"
+          className="inline-flex shrink-0 items-center gap-1.5 rounded-full bg-white px-3.5 py-2 text-2xs font-bold text-maroon shadow-soft transition hover:bg-rose active:scale-95"
         >
           <PencilLine className="size-3.5" aria-hidden="true" />
           Edit

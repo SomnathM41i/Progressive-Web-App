@@ -3,7 +3,7 @@ import { Link, type LinkProps } from 'react-router-dom'
 
 import { cn } from '@/lib/cn'
 
-type Variant = 'primary' | 'gold' | 'outline' | 'ghost'
+type Variant = 'primary' | 'secondary' | 'outline' | 'ghost'
 type Size = 'sm' | 'md' | 'lg'
 
 const base =
@@ -12,12 +12,10 @@ const base =
   'active:scale-[0.98] focus-visible:outline-2 focus-visible:outline-offset-2'
 
 const variants: Record<Variant, string> = {
-  primary:
-    'bg-gradient-to-br from-saffron to-saffron-dark text-white shadow-[0_6px_18px_rgba(232,97,42,0.32)] hover:brightness-[1.04]',
-  gold: 'bg-gradient-to-br from-gold to-gold-light text-maroon-dark shadow-gold hover:brightness-[1.04]',
-  outline:
-    'border-[1.5px] border-maroon/30 text-maroon hover:border-maroon hover:bg-maroon/5',
-  ghost: 'text-maroon hover:bg-maroon/6',
+  primary: 'bg-maroon text-white shadow-brand hover:bg-maroon-dark',
+  secondary: 'bg-rose text-maroon hover:bg-rose-dark',
+  outline: 'border border-line-strong text-maroon hover:border-maroon/40 hover:bg-rose',
+  ghost: 'text-maroon hover:bg-rose',
 }
 
 const sizes: Record<Size, string> = {

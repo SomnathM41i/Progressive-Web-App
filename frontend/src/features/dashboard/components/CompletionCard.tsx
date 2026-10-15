@@ -30,7 +30,7 @@ export function CompletionCard({ summary }: CompletionCardProps) {
     <Card>
       <div className="flex items-baseline justify-between gap-3">
         <h2 className="text-base text-maroon">Complete your profile</h2>
-        <span className="text-sm font-bold text-saffron">{summary.completion}%</span>
+        <span className="text-sm font-bold text-maroon">{summary.completion}%</span>
       </div>
 
       <ProgressBar
@@ -42,7 +42,10 @@ export function CompletionCard({ summary }: CompletionCardProps) {
       <ul className="mt-3.5 space-y-2">
         {summary.missingFields.map((field) => (
           <li key={field} className="flex items-center gap-2 text-xs text-muted">
-            <CircleDot className="size-3.5 shrink-0 text-gold" aria-hidden="true" />
+            <CircleDot
+              className="size-3.5 shrink-0 text-maroon/70"
+              aria-hidden="true"
+            />
             {field}
           </li>
         ))}

@@ -1,0 +1,44 @@
+# Apache config for the Shivaraj Maratha PWA (Vite SPA).
+# Extracted into the subdomain document root, this file makes client-side routing,
+# PWA service-worker updates and asset caching behave correctly on shared hosting.
+
+# --- SPA fallback -----------------------------------------------------------
+# Serve real files/directories (hashed assets, icons, sw.js, manifest) as-is.
+# Every other path belongs to the client-side router, so serve the app shell.
+<IfModule mod_rewrite.c>
+  RewriteEngine On
+  RewriteBase /
+
+  RewriteCond %{REQUEST_FILENAME} -f [OR]
+  RewriteCond %{REQUEST_FILENAME} -d
+  RewriteRule ^ - [L]
+
+  RewriteRule . /index.html [L]
+</IfModule>
+
+<IfModule mod_headers.c>
+  # Hashed build assets never change content, so cache them aggressively.
+  <FilesMatch "\.(js|css|png|jpg|jpeg|gif|svg|ico|webp|woff|woff2|ttf)$">
+    Header set Cache-Control "public, max-age=31536000, immutable"
+  </FilesMatch>
+
+  # The app shell and service worker must always be revalidated so new
+  # deployments are picked up. Declared after the block above so it wins.
+  <FilesMatch "^(index\.html|sw\.js|manifest\.webmanifest|registerSW\.js|workbox-.*\.js)$">
+    Header set Cache-Control "no-cache, must-revalidate"
+  </FilesMatch>
+
+  <IfModule mod_headers.c>
+    Header set X-Content-Type-Options "nosniff"
+  </IfModule>
+</IfModule>
+
+# Compress text assets on the fly.
+<IfModule mod_deflate.c>
+  AddOutputFilterByType DEFLATE text/html text/plain text/css application/javascript application/json image/svg+xml application/manifest+json
+</IfModule>
+
+DirectoryIndex index.html
+
+# Serve the SPA shell for the directory itself, and never list files.
+Options -Indexes

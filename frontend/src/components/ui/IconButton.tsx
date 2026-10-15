@@ -14,8 +14,8 @@ const sizes: Record<Size, string> = {
 
 const variants: Record<Variant, string> = {
   solid: 'bg-maroon text-white hover:bg-maroon-dark',
-  soft: 'bg-maroon/6 text-maroon hover:bg-maroon/12',
-  plain: 'text-maroon hover:bg-maroon/6',
+  soft: 'bg-rose text-maroon hover:bg-rose-dark',
+  plain: 'text-maroon hover:bg-rose',
 }
 
 function iconButtonStyles(size: Size, variant: Variant, className?: string): string {

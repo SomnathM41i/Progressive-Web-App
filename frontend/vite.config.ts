@@ -23,8 +23,8 @@ export default defineConfig({
         scope: '/',
         display: 'standalone',
         orientation: 'portrait',
-        theme_color: '#6B1A1A',
-        background_color: '#FFF8F0',
+        theme_color: '#990D32',
+        background_color: '#FAF9F7',
         categories: ['lifestyle', 'social'],
         icons: [
           { src: 'icons/pwa-192.png', sizes: '192x192', type: 'image/png' },

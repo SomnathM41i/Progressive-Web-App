@@ -1,9 +1,5 @@
 import { env } from '@/config/env'
-import type {
-  AuthService,
-  AuthSession,
-  LoginCredentials,
-} from '@/features/auth/types'
+import type { AuthService, AuthSession, LoginCredentials } from '@/features/auth/types'
 import { sessionStore } from '@/lib/storage'
 import { api } from '@/services/api'
 import { ApiError } from '@/services/api-error'

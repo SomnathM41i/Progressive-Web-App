@@ -4,6 +4,7 @@ import { createRoot } from 'react-dom/client'
 import '@/styles/index.css'
 import { App } from '@/app/App'
 import { AuthProvider } from '@/features/auth/context/AuthProvider'
+import { ShortlistProvider } from '@/features/shortlist/context/ShortlistProvider'
 import { ToastProvider } from '@/components/feedback/ToastProvider'
 
 const root = document.getElementById('root')
@@ -15,9 +16,11 @@ if (!root) {
 createRoot(root).render(
   <StrictMode>
     <AuthProvider>
-      <ToastProvider>
-        <App />
-      </ToastProvider>
+      <ShortlistProvider>
+        <ToastProvider>
+          <App />
+        </ToastProvider>
+      </ShortlistProvider>
     </AuthProvider>
   </StrictMode>,
 )

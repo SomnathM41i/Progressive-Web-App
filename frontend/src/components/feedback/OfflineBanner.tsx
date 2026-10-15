@@ -17,7 +17,7 @@ export function OfflineBanner() {
     <div
       role="status"
       aria-live="polite"
-      className="flex items-center justify-center gap-2 bg-maroon-dark px-4 py-2 text-2xs font-semibold text-gold-light"
+      className="flex items-center justify-center gap-2 bg-maroon-dark px-4 py-2 text-2xs font-semibold text-rose"
     >
       <WifiOff className="size-3.5" aria-hidden="true" />
       You are offline — showing saved content.

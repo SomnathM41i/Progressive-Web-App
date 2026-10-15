@@ -40,8 +40,8 @@ export function Avatar({ src, name, size = 'md', className }: AvatarProps) {
     <span
       className={cn(
         'inline-flex shrink-0 items-center justify-center overflow-hidden rounded-full',
-        'bg-gradient-to-br from-maroon to-maroon-deep font-semibold text-gold-light',
-        'ring-2 ring-white/70',
+        'bg-gradient-to-br from-maroon to-maroon-dark font-semibold text-white',
+        'ring-2 ring-white',
         sizes[size],
         className,
       )}

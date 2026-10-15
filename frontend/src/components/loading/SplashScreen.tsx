@@ -20,15 +20,15 @@ export function SplashScreen() {
       {/* Warm brand glow behind the emblem. */}
       <div
         aria-hidden="true"
-        className="pointer-events-none absolute -top-24 left-1/2 size-[22rem] -translate-x-1/2 rounded-full bg-gradient-to-b from-gold/25 to-transparent blur-2xl"
+        className="pointer-events-none absolute -top-24 left-1/2 size-[22rem] -translate-x-1/2 rounded-full bg-gradient-to-b from-maroon/15 to-transparent blur-2xl"
       />
       <div
         aria-hidden="true"
-        className="pointer-events-none absolute -bottom-32 left-1/2 size-[26rem] -translate-x-1/2 rounded-full bg-gradient-to-t from-saffron/15 to-transparent blur-3xl"
+        className="pointer-events-none absolute -bottom-32 left-1/2 size-[26rem] -translate-x-1/2 rounded-full bg-gradient-to-t from-rose to-transparent blur-3xl"
       />
 
       <div className="relative flex flex-col items-center">
-        <div className="animate-logo-reveal rounded-full bg-white/70 p-5 shadow-card ring-1 ring-gold/25">
+        <div className="animate-logo-reveal rounded-full bg-white/70 p-5 shadow-card ring-1 ring-line">
           <img
             src={logo}
             alt="Shivaraj Maratha"
@@ -39,7 +39,7 @@ export function SplashScreen() {
         </div>
 
         <h1 className="mt-6 text-2xl text-maroon sm:text-3xl">शिवराज मराठा</h1>
-        <p className="mt-1 text-xs font-medium tracking-[0.14em] text-gold uppercase">
+        <p className="mt-1 text-xs font-medium tracking-[0.14em] text-maroon/80 uppercase">
           वधू वर सूचक केंद्र
         </p>
 
@@ -47,8 +47,8 @@ export function SplashScreen() {
           {TAGLINE}
         </p>
 
-        <div className="mt-10 h-1 w-40 overflow-hidden rounded-full bg-maroon/10">
-          <div className="h-full w-full origin-left animate-progress rounded-full bg-gradient-to-r from-saffron to-gold" />
+        <div className="mt-10 h-1 w-40 overflow-hidden rounded-full bg-rose">
+          <div className="h-full w-full origin-left animate-progress rounded-full bg-maroon" />
         </div>
       </div>
 

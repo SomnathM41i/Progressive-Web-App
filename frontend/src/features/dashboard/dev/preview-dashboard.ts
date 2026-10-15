@@ -16,6 +16,7 @@ export const PREVIEW_DASHBOARD: DashboardData = {
     profileId: 'SM008656',
     completion: 68,
     photoUrl: null,
+    isVerified: true,
     missingFields: ['Education details', 'Family details', 'Photo'],
   },
   recommended: [
@@ -68,6 +69,22 @@ export const PREVIEW_DASHBOARD: DashboardData = {
       isNew: true,
     },
   ],
+  successStories: [
+    {
+      id: 's-1',
+      couple: 'स्नेहा आणि राहुल',
+      place: 'सातारा',
+      year: 2024,
+      quote: 'विश्वासार्ह माहिती आणि चांगले स्थळ यामुळे योग्य जोडी लवकर भेटली.',
+    },
+    {
+      id: 's-2',
+      couple: 'प्रिया आणि अमोल',
+      place: 'कोल्हापूर',
+      year: 2023,
+      quote: 'कुटुंबासोबत चर्चा करून निर्णय घेणं सोपं झालं.',
+    },
+  ],
   announcements: [
     {
       id: 'a-1',
@@ -84,4 +101,5 @@ export const PREVIEW_DASHBOARD: DashboardData = {
       tone: 'info',
     },
   ],
+  todayMatches: 12,
 }

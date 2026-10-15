@@ -1,4 +1,11 @@
-import { Bell, Bookmark, Home, Search, UserRound, type LucideIcon } from 'lucide-react'
+import {
+  Heart,
+  Home,
+  MessageCircle,
+  Search,
+  UserRound,
+  type LucideIcon,
+} from 'lucide-react'
 import { NavLink } from 'react-router-dom'
 
 import { routes } from '@/config/routes'
@@ -13,22 +20,22 @@ interface NavItem {
 const bottomNavItems: NavItem[] = [
   { label: 'Home', to: routes.home, icon: Home },
   { label: 'Search', to: routes.search, icon: Search },
-  { label: 'Shortlist', to: routes.shortlist, icon: Bookmark },
-  { label: 'Notifications', to: routes.notifications, icon: Bell },
+  { label: 'Interests', to: routes.interests, icon: Heart },
+  { label: 'Chat', to: routes.chat, icon: MessageCircle },
   { label: 'Profile', to: routes.profile, icon: UserRound },
 ]
 
 /**
  * Persistent mobile tab bar.
  *
- * Sits above the device safe area and uses `end` matching on the home route so
- * it is not highlighted on every nested path.
+ * Hidden from the `md` breakpoint, where the header carries navigation instead.
+ * `end` matching on the home route keeps it from highlighting on nested paths.
  */
 export function BottomNavigation() {
   return (
     <nav
       aria-label="Primary"
-      className="fixed inset-x-0 bottom-0 z-40 border-t border-line bg-surface/95 backdrop-blur-md pb-safe"
+      className="fixed inset-x-0 bottom-0 z-40 border-t border-line bg-surface/95 pb-safe shadow-nav backdrop-blur-md md:hidden"
     >
       <ul className="mx-auto flex max-w-lg items-stretch">
         {bottomNavItems.map(({ label, to, icon: Icon }) => (
@@ -38,24 +45,21 @@ export function BottomNavigation() {
               end={to === routes.home}
               className={({ isActive }) =>
                 cn(
-                  'relative flex h-16 flex-col items-center justify-center gap-1 transition-colors',
-                  isActive ? 'text-saffron' : 'text-muted hover:text-maroon',
+                  'relative flex h-16 flex-col items-center justify-center gap-1 transition active:opacity-60',
+                  isActive ? 'text-maroon' : 'text-muted hover:text-maroon',
                 )
               }
             >
               {({ isActive }) => (
                 <>
                   <span
-                    aria-hidden="true"
                     className={cn(
-                      'absolute top-0 h-0.5 w-8 rounded-full transition-opacity',
-                      isActive ? 'bg-saffron opacity-100' : 'opacity-0',
+                      'flex size-8 items-center justify-center rounded-full transition',
+                      isActive ? 'bg-rose' : 'bg-transparent',
                     )}
-                  />
-                  <Icon
-                    className={cn('size-5 transition-transform', isActive && 'scale-110')}
-                    aria-hidden="true"
-                  />
+                  >
+                    <Icon className="size-5" aria-hidden="true" />
+                  </span>
                   <span className="text-2xs font-semibold">{label}</span>
                 </>
               )}

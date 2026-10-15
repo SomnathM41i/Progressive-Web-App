@@ -3,20 +3,20 @@ import { cn } from '@/lib/cn'
 interface ProgressBarProps {
   value: number
   label?: string
-  tone?: 'saffron' | 'gold' | 'success'
+  tone?: 'brand' | 'success' | 'onDark'
   className?: string
 }
 
 const tones = {
-  saffron: 'bg-gradient-to-r from-saffron to-gold',
-  gold: 'bg-gradient-to-r from-gold to-gold-light',
+  brand: 'bg-maroon',
   success: 'bg-success',
+  onDark: 'bg-white',
 } as const
 
 export function ProgressBar({
   value,
   label,
-  tone = 'saffron',
+  tone = 'brand',
   className,
 }: ProgressBarProps) {
   const clamped = Math.min(100, Math.max(0, Math.round(value)))
@@ -28,10 +28,13 @@ export function ProgressBar({
       aria-valuemin={0}
       aria-valuemax={100}
       aria-label={label}
-      className={cn('h-2 w-full overflow-hidden rounded-full bg-maroon/10', className)}
+      className={cn('h-2 w-full overflow-hidden rounded-full bg-rose', className)}
     >
       <div
-        className={cn('h-full rounded-full transition-[width] duration-500', tones[tone])}
+        className={cn(
+          'h-full rounded-full transition-[width] duration-500',
+          tones[tone],
+        )}
         style={{ width: `${clamped}%` }}
       />
     </div>

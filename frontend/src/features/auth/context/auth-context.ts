@@ -1,10 +1,6 @@
 import { createContext } from 'react'
 
-import type {
-  AuthStatus,
-  AuthUser,
-  LoginCredentials,
-} from '@/features/auth/types'
+import type { AuthStatus, AuthUser, LoginCredentials } from '@/features/auth/types'
 
 export interface AuthContextValue {
   status: AuthStatus

@@ -1,5 +1,6 @@
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom'
 
+import { ScrollToTop } from '@/app/ScrollToTop'
 import { AuthLayout } from '@/layouts/AuthLayout'
 import { AppLayout } from '@/layouts/AppLayout'
 import { RedirectIfAuthenticated, RequireAuth } from '@/app/guards'
@@ -13,11 +14,15 @@ import { RegisterPage } from '@/features/auth/pages/RegisterPage'
 import { DashboardPage } from '@/features/dashboard/pages/DashboardPage'
 import { SearchPage } from '@/features/search/pages/SearchPage'
 import { ShortlistPage } from '@/features/shortlist/pages/ShortlistPage'
+import { InterestsPage } from '@/features/interests/pages/InterestsPage'
+import { ChatPage } from '@/features/chat/pages/ChatPage'
 import { NotificationsPage } from '@/features/notifications/pages/NotificationsPage'
 import { ProfilePage } from '@/features/profiles/pages/ProfilePage'
 import { ProfileEditPage } from '@/features/profiles/pages/ProfileEditPage'
+import { ProfileDetailPage } from '@/features/profiles/pages/ProfileDetailPage'
 import { BrowsePage } from '@/features/profiles/pages/BrowsePage'
 import { MembershipPage } from '@/features/membership/pages/MembershipPage'
+import { SuccessStoriesPage } from '@/features/success-stories/pages/SuccessStoriesPage'
 
 /**
  * Application routing.
@@ -30,6 +35,7 @@ import { MembershipPage } from '@/features/membership/pages/MembershipPage'
 export function AppRouter() {
   return (
     <BrowserRouter>
+      <ScrollToTop />
       <Routes>
         <Route element={<AuthLayout />}>
           <Route element={<RedirectIfAuthenticated />}>
@@ -45,11 +51,15 @@ export function AppRouter() {
             <Route path={routes.home} element={<DashboardPage />} />
             <Route path={routes.search} element={<SearchPage />} />
             <Route path={routes.shortlist} element={<ShortlistPage />} />
+            <Route path={routes.interests} element={<InterestsPage />} />
+            <Route path={routes.chat} element={<ChatPage />} />
             <Route path={routes.notifications} element={<NotificationsPage />} />
             <Route path={routes.profile} element={<ProfilePage />} />
             <Route path={routes.profileEdit} element={<ProfileEditPage />} />
+            <Route path={routes.profileDetail} element={<ProfileDetailPage />} />
             <Route path={routes.browse} element={<BrowsePage />} />
             <Route path={routes.membership} element={<MembershipPage />} />
+            <Route path={routes.successStories} element={<SuccessStoriesPage />} />
           </Route>
         </Route>
 

@@ -1,13 +1,12 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import type { ReactNode } from 'react'
 
-import { AuthContext, type AuthContextValue } from '@/features/auth/context/auth-context'
+import {
+  AuthContext,
+  type AuthContextValue,
+} from '@/features/auth/context/auth-context'
 import { authService, isPreviewAuth } from '@/features/auth/services/auth.service'
-import type {
-  AuthStatus,
-  AuthUser,
-  LoginCredentials,
-} from '@/features/auth/types'
+import type { AuthStatus, AuthUser, LoginCredentials } from '@/features/auth/types'
 import { setAuthTokenProvider, setUnauthorizedHandler } from '@/services/api'
 
 /**

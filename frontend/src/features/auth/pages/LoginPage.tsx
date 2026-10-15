@@ -42,7 +42,7 @@ export function LoginPage() {
         <Link
           to={routes.welcome}
           aria-label="Back"
-          className="-ml-2 flex size-9 items-center justify-center rounded-full text-maroon transition hover:bg-maroon/6"
+          className="-ml-2 flex size-9 items-center justify-center rounded-full text-maroon transition hover:bg-rose"
         >
           <ChevronLeft className="size-5" aria-hidden="true" />
         </Link>
@@ -91,7 +91,7 @@ export function LoginPage() {
 
         <p className="mt-6 text-center text-xs text-muted">
           No account yet?{' '}
-          <Link to={routes.register} className="font-semibold text-saffron">
+          <Link to={routes.register} className="font-semibold text-maroon">
             Register
           </Link>
         </p>

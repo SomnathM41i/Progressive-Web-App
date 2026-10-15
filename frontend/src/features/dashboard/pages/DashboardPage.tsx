@@ -1,16 +1,20 @@
-import { SearchX, Sparkles, UserPlus } from 'lucide-react'
+import { Sparkles, UserPlus } from 'lucide-react'
 
-import { PageLoader } from '@/components/loading/PageLoader'
 import { EmptyState } from '@/components/states/EmptyState'
 import { ErrorState } from '@/components/states/ErrorState'
+import { PreviewNotice } from '@/components/feedback/PreviewNotice'
 import { SectionHeading } from '@/components/ui/SectionHeading'
 import { AnnouncementsCard } from '@/features/dashboard/components/AnnouncementsCard'
 import { CompletionCard } from '@/features/dashboard/components/CompletionCard'
-import { PreviewNotice } from '@/components/feedback/PreviewNotice'
+import { ContactFooter } from '@/features/dashboard/components/ContactFooter'
+import { DashboardSkeleton } from '@/features/dashboard/components/DashboardSkeleton'
+import { HeroBanner } from '@/features/dashboard/components/HeroBanner'
 import { ProfileSummaryCard } from '@/features/dashboard/components/ProfileSummaryCard'
-import { ProfileRail } from '@/features/dashboard/components/ProfilePreviewCard'
-import { QuickActions } from '@/features/dashboard/components/QuickActions'
+import { PromoRail } from '@/features/dashboard/components/PromoRail'
+import { QuickAccessGrid } from '@/features/dashboard/components/QuickAccessGrid'
+import { SuccessStories } from '@/features/dashboard/components/SuccessStories'
 import { useDashboard } from '@/features/dashboard/hooks/useDashboard'
+import { ProfileCarousel } from '@/features/profiles/components/ProfileCarousel'
 import { useAuth } from '@/features/auth/hooks/useAuth'
 
 export function DashboardPage() {
@@ -18,7 +22,7 @@ export function DashboardPage() {
   const { user, isPreview } = useAuth()
 
   if (state.status === 'loading') {
-    return <PageLoader label="Loading dashboard…" />
+    return <DashboardSkeleton />
   }
 
   if (state.status === 'error') {
@@ -33,37 +37,48 @@ export function DashboardPage() {
     )
   }
 
-  const { summary, recommended, recentlyAdded, announcements } = state.data
+  const {
+    summary,
+    recommended,
+    recentlyAdded,
+    successStories,
+    announcements,
+    todayMatches,
+  } = state.data
   const firstName = (user?.name ?? summary.name).split(' ')[0]
 
   return (
     <div className="space-y-6 px-4 pt-4 pb-6">
-      <section aria-label="Greeting">
-        <p className="text-xs text-muted">Hello,</p>
-        <h1 className="mt-0.5 text-2xl text-maroon">{firstName}</h1>
-        <p className="mt-1 text-xs text-muted">
-          See matches picked for you.
-        </p>
-      </section>
+      <HeroBanner name={firstName} />
 
       {isPreview ? <PreviewNotice /> : null}
 
-      <ProfileSummaryCard summary={summary} />
+      {todayMatches > 0 ? (
+        <section aria-label="New matches">
+          <SectionHeading
+            title="Today's matches"
+            subtitle={`${todayMatches} new matches since your last visit`}
+          />
+          <PromoRail />
+        </section>
+      ) : null}
 
-      <section aria-label="Quick actions">
-        <SectionHeading title="Quick actions" />
-        <QuickActions />
-      </section>
+      <ProfileSummaryCard summary={summary} />
 
       <CompletionCard summary={summary} />
 
+      <section aria-label="Quick access">
+        <SectionHeading title="Quick access" />
+        <QuickAccessGrid />
+      </section>
+
       <section aria-label="Recommended profiles">
         <SectionHeading
-          title="Recommended profiles"
+          title="Recommended matches"
           subtitle="Based on your preferences"
         />
         {recommended.length > 0 ? (
-          <ProfileRail profiles={recommended} />
+          <ProfileCarousel profiles={recommended} />
         ) : (
           <EmptyState
             icon={<Sparkles className="size-5" aria-hidden="true" />}
@@ -74,9 +89,9 @@ export function DashboardPage() {
       </section>
 
       <section aria-label="Recently added profiles">
-        <SectionHeading title="Recently added profiles" />
+        <SectionHeading title="Recently added" />
         {recentlyAdded.length > 0 ? (
-          <ProfileRail profiles={recentlyAdded} />
+          <ProfileCarousel profiles={recentlyAdded} />
         ) : (
           <EmptyState
             icon={<UserPlus className="size-5" aria-hidden="true" />}
@@ -86,20 +101,15 @@ export function DashboardPage() {
         )}
       </section>
 
+      {successStories.length > 0 ? <SuccessStories stories={successStories} /> : null}
+
       {announcements.length > 0 ? (
         <section aria-label="Notifications">
           <AnnouncementsCard announcements={announcements} />
         </section>
-      ) : (
-        <section aria-label="Notifications">
-          <SectionHeading title="Notifications" />
-          <EmptyState
-            icon={<SearchX className="size-5" aria-hidden="true" />}
-            title="No notifications"
-            description="New notifications will appear here."
-          />
-        </section>
-      )}
+      ) : null}
+
+      <ContactFooter />
     </div>
   )
 }

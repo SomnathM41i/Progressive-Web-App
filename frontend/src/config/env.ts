@@ -22,14 +22,16 @@ export const env = {
   apiTimeout: readNumber(import.meta.env.VITE_API_TIMEOUT, 15_000),
 
   /**
-   * Development-only preview of the authenticated experience.
+   * Preview of the authenticated experience, driven purely by
+   * `VITE_ENABLE_DEV_PREVIEW`.
    *
    * The API collection has not been integrated yet, so there is no real session
    * to restore. When this flag is on we render the dashboard with clearly
    * labelled placeholder data instead of pretending authentication works.
    *
-   * It can never be enabled in a production build.
+   * It defaults to off (the committed `.env.production` sets it false), so a real
+   * release never shows placeholder data. A demo deployment opts in explicitly via
+   * `.env.production.local`, which is gitignored.
    */
-  devPreview:
-    import.meta.env.DEV && readBoolean(import.meta.env.VITE_ENABLE_DEV_PREVIEW),
+  devPreview: readBoolean(import.meta.env.VITE_ENABLE_DEV_PREVIEW),
 } as const

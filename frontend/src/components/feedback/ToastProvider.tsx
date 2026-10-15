@@ -56,9 +56,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
     (id: string) => {
       clearTimer(id)
       setToasts((current) =>
-        current.map((toast) =>
-          toast.id === id ? { ...toast, leaving: true } : toast,
-        ),
+        current.map((toast) => (toast.id === id ? { ...toast, leaving: true } : toast)),
       )
       setTimeout(() => remove(id), EXIT_DURATION)
     },
@@ -174,15 +172,17 @@ export function ToastProvider({ children }: { children: ReactNode }) {
     [show, update, dismiss, clear],
   )
 
-  const value = useMemo<ToastContextValue>(
-    () => ({ toasts, api }),
-    [toasts, api],
-  )
+  const value = useMemo<ToastContextValue>(() => ({ toasts, api }), [toasts, api])
 
   return (
     <ToastContext.Provider value={value}>
       {children}
-      <ToastViewport toasts={toasts} onDismiss={dismiss} onPause={pause} onResume={resume} />
+      <ToastViewport
+        toasts={toasts}
+        onDismiss={dismiss}
+        onPause={pause}
+        onResume={resume}
+      />
     </ToastContext.Provider>
   )
 }

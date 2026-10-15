@@ -1,3 +1,5 @@
+import type { ProfilePreview } from '@/features/profiles/types'
+
 /**
  * Dashboard data contracts.
  *
@@ -5,17 +7,7 @@
  * from the real API resources once the collection is integrated.
  */
 
-export interface ProfilePreview {
-  id: string
-  name: string
-  age: number
-  location: string
-  occupation?: string
-  photoUrl?: string | null
-  /** Only rendered when the backend explicitly confirms verification. */
-  isVerified?: boolean
-  isNew?: boolean
-}
+export type { ProfilePreview }
 
 export interface ProfileSummary {
   name: string
@@ -37,9 +29,22 @@ export interface Announcement {
   tone: 'info' | 'success' | 'warning'
 }
 
+export interface SuccessStory {
+  id: string
+  /** Couple names as published, e.g. "स्नेहा आणि राहुल". */
+  couple: string
+  place: string
+  quote: string
+  /** Year the couple married. */
+  year: number
+}
+
 export interface DashboardData {
   summary: ProfileSummary
   recommended: ProfilePreview[]
   recentlyAdded: ProfilePreview[]
+  successStories: SuccessStory[]
   announcements: Announcement[]
+  /** Count of new matches since the member last visited. */
+  todayMatches: number
 }

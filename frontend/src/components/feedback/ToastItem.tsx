@@ -42,7 +42,7 @@ const variantStyles: Record<ToastVariant, VariantStyle> = {
   loading: {
     icon: Loader2,
     accent: 'border-l-maroon',
-    iconWrap: 'bg-maroon/8 text-maroon',
+    iconWrap: 'bg-rose text-maroon',
     spins: true,
   },
 }
@@ -97,7 +97,7 @@ export function ToastItem({ toast, onDismiss, onPause, onResume }: ToastItemProp
           <button
             type="button"
             onClick={toast.action.onClick}
-            className="mt-2 text-xs font-semibold text-saffron hover:text-saffron-dark"
+            className="mt-2 text-xs font-semibold text-maroon hover:text-maroon-dark"
           >
             {toast.action.label}
           </button>
@@ -108,7 +108,7 @@ export function ToastItem({ toast, onDismiss, onPause, onResume }: ToastItemProp
         type="button"
         onClick={() => onDismiss(toast.id)}
         aria-label="Dismiss notification"
-        className="-mt-0.5 -mr-0.5 flex size-7 shrink-0 items-center justify-center rounded-full text-muted transition hover:bg-maroon/6 hover:text-maroon"
+        className="-mt-0.5 -mr-0.5 flex size-7 shrink-0 items-center justify-center rounded-full text-muted transition hover:bg-rose hover:text-maroon"
       >
         <X className="size-4" aria-hidden="true" />
       </button>
