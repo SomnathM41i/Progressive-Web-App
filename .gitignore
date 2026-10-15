@@ -16,3 +16,7 @@ desktop.ini
 
 # Local scratch
 /tmp/
+
+# Local agent/dev notes (not published)
+AGENTS.md
+docs/
