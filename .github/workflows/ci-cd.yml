@@ -1,0 +1,162 @@
+name: CI/CD
+
+# Runs on every push/PR. The deploy job only runs for pushes to `main`, and
+# only after both test jobs pass. Anything it publishes is what Hostinger pulls.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: ci-cd-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  frontend:
+    name: Frontend (lint, typecheck, build)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      - name: Build
+        env:
+          VITE_API_BASE_URL: /api
+          VITE_API_TIMEOUT: '15000'
+          VITE_ENABLE_DEV_PREVIEW: 'false'
+        run: npm run build
+
+  backend:
+    name: Backend (install, test)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.2'
+          tools: composer
+          coverage: none
+
+      - name: Install dependencies
+        run: composer install --no-interaction --prefer-dist --no-progress
+
+      - name: Prepare environment
+        run: |
+          cp .env.example .env
+          php artisan key:generate
+
+      - name: Run tests
+        run: php artisan test
+
+  deploy:
+    name: Build artifacts and publish to `deploy`
+    if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
+    needs: [frontend, backend]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Build PWA (production)
+        working-directory: frontend
+        env:
+          VITE_API_BASE_URL: /api
+          VITE_API_TIMEOUT: '15000'
+          VITE_ENABLE_DEV_PREVIEW: 'false'
+        run: |
+          npm ci
+          npm run build
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.2'
+          tools: composer
+          coverage: none
+
+      - name: Install backend (production)
+        working-directory: backend
+        run: composer install --no-dev --no-interaction --prefer-dist --optimize-autoloader --no-progress
+
+      - name: Assemble deploy tree
+        run: |
+          set -euo pipefail
+          rm -rf build
+          mkdir -p build
+
+          # 1) Built PWA at the web root.
+          cp -r frontend/dist/. build/
+
+          # 2) Laravel API under /api (vendor included; no build step on the host).
+          mkdir -p build/api
+          rsync -a \
+            --exclude='.env' \
+            --exclude='.env.*' \
+            --exclude='tests/' \
+            --exclude='phpunit.xml' \
+            --exclude='.phpunit.result.cache' \
+            --exclude='database/*.sqlite' \
+            --exclude='storage/logs/*.log' \
+            --exclude='storage/framework/views/*.php' \
+            backend/ build/api/
+
+          # 3) Web-root routing (SPA fallback + /api -> Laravel).
+          cp .github/deploy/root.htaccess build/.htaccess
+
+          # 4) Keep writable runtime directories present in the published tree.
+          mkdir -p build/api/storage/framework/cache/data \
+                   build/api/storage/framework/sessions \
+                   build/api/storage/framework/views \
+                   build/api/storage/logs \
+                   build/api/bootstrap/cache
+
+          echo "--- deploy root ---"
+          ls -la build
+          echo "--- api/ ---"
+          ls -la build/api
+
+      - name: Publish to `deploy` branch
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./build
+          publish_branch: deploy
+          user_name: github-actions[bot]
+          user_email: github-actions[bot]@users.noreply.github.com
+          commit_message: 'deploy: ${{ github.sha }}'
+          force_orphan: true
+          disable_nojekyll: true
