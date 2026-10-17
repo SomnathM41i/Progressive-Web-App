@@ -11,7 +11,7 @@ export function QuickAccessGrid() {
           <li key={to}>
             <Link
               to={to}
-              className="flex h-full flex-col items-center gap-2 rounded-card border border-line bg-surface px-1.5 py-3 text-center shadow-soft transition duration-200 hover:-translate-y-0.5 hover:border-maroon/25 hover:shadow-card active:scale-[0.98]"
+              className="flex aspect-square flex-col items-center justify-center gap-1.5 rounded-card border border-line bg-surface p-2 text-center shadow-soft transition duration-200 hover:-translate-y-0.5 hover:border-maroon/25 hover:shadow-card active:scale-[0.98]"
             >
               <span className="flex size-10 items-center justify-center rounded-full bg-rose text-maroon">
                 <Icon className="size-5" aria-hidden="true" />

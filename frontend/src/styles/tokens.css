@@ -9,6 +9,8 @@
  * (bg-maroon, text-muted, rounded-card, shadow-card, font-display, ...).
  */
 @theme {
+  --color-app-canvas: #fffdfa;
+
   /* ── Brand palette ───────────────────────────────────────────── */
   --color-maroon: #990d32;
   --color-maroon-dark: #780a27;
@@ -68,7 +70,7 @@
   --animate-toast-in: toast-in 0.26s var(--ease-out-soft) both;
   --animate-toast-out: toast-out 0.18s ease-in both;
   --animate-spin-slow: spin 1.1s linear infinite;
-  --animate-progress: progress 1.6s var(--ease-out-soft) forwards;
+  --animate-progress: progress 2.4s var(--ease-out-soft) forwards;
   --animate-shimmer: shimmer 1.8s ease-in-out infinite;
   --animate-sheet-in: sheet-in 0.28s var(--ease-out-soft) both;
 
@@ -120,7 +122,7 @@
   @keyframes toast-in {
     from {
       opacity: 0;
-      transform: translateY(-8px) scale(0.97);
+      transform: translateY(8px) scale(0.97);
     }
     to {
       opacity: 1;
@@ -135,7 +137,7 @@
     }
     to {
       opacity: 0;
-      transform: translateY(-6px) scale(0.97);
+      transform: translateY(6px) scale(0.97);
     }
   }
 
@@ -158,4 +160,15 @@
       transform: translateX(0);
     }
   }
+}
+
+:root {
+  color-scheme: light;
+  --app-header-height: var(--app-main-header-height);
+  --app-main-header-height: 3.75rem;
+  --app-bottom-nav-height: 4rem;
+  --page-padding-x: 1rem;
+  --section-gap: 1rem;
+  --card-padding: 1.25rem;
+  --control-height: 2.75rem;
 }

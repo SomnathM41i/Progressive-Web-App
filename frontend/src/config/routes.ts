@@ -12,6 +12,7 @@ export const routes = {
   search: '/search',
   shortlist: '/shortlist',
   interests: '/interests',
+  matches: '/matches',
   chat: '/chat',
   notifications: '/notifications',
   profile: '/profile',

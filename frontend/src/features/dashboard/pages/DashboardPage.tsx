@@ -2,7 +2,6 @@ import { Sparkles, UserPlus } from 'lucide-react'
 
 import { EmptyState } from '@/components/states/EmptyState'
 import { ErrorState } from '@/components/states/ErrorState'
-import { PreviewNotice } from '@/components/feedback/PreviewNotice'
 import { SectionHeading } from '@/components/ui/SectionHeading'
 import { AnnouncementsCard } from '@/features/dashboard/components/AnnouncementsCard'
 import { DashboardSkeleton } from '@/features/dashboard/components/DashboardSkeleton'
@@ -40,10 +39,7 @@ export function DashboardPage() {
     <div className="space-y-6 px-4 pt-4 pb-6">
       <HeroBanner name={firstName} />
 
-      {isPreview ? <PreviewNotice /> : null}
-
       <section aria-label="Quick access">
-        <SectionHeading title="Explore" />
         <QuickAccessGrid />
       </section>
 

@@ -11,8 +11,8 @@ interface ToastViewportProps {
 /**
  * Fixed stack of active notifications.
  *
- * Anchored to the top so it never collides with the bottom navigation bar, and
- * offset by the device safe area on notched screens.
+ * Anchored to the bottom, lifted clear of the mobile tab bar (4rem) and the
+ * device safe area, so it never covers the header or the bottom navigation.
  */
 export function ToastViewport({
   toasts,
@@ -23,8 +23,8 @@ export function ToastViewport({
   if (toasts.length === 0) return null
 
   return (
-    <div className="pointer-events-none fixed inset-x-0 top-0 z-[60] flex justify-center px-3 pt-safe">
-      <div className="flex w-full max-w-md flex-col gap-2 pt-3">
+    <div className="pointer-events-none fixed inset-x-0 bottom-0 z-[60] flex justify-center px-3 pb-[calc(4.5rem+env(safe-area-inset-bottom,0px))]">
+      <div className="flex w-full max-w-md flex-col-reverse gap-2">
         {toasts.map((toast) => (
           <ToastItem
             key={toast.id}

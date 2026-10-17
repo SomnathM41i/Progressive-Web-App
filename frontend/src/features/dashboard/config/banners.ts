@@ -87,6 +87,6 @@ export interface ShortcutTile {
 export const shortcutTiles: ShortcutTile[] = [
   { label: 'Search', to: routes.search, icon: Search },
   { label: 'Shortlist', to: routes.shortlist, icon: Bookmark },
-  { label: 'Success stories', to: routes.successStories, icon: Heart },
+  { label: 'Matches', to: routes.matches, icon: Heart },
   { label: 'My profile', to: routes.profile, icon: UserRound },
 ]

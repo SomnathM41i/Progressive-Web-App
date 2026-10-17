@@ -48,7 +48,7 @@ export function TextField({
           id={fieldId}
           aria-invalid={error ? true : undefined}
           aria-describedby={describedBy}
-          className="h-11 w-full bg-transparent text-sm text-ink outline-none placeholder:text-muted/60"
+          className="h-[var(--control-height)] w-full bg-transparent text-sm text-ink outline-none placeholder:text-muted/60"
           {...rest}
         />
       </div>

@@ -15,6 +15,7 @@ import { DashboardPage } from '@/features/dashboard/pages/DashboardPage'
 import { SearchPage } from '@/features/search/pages/SearchPage'
 import { ShortlistPage } from '@/features/shortlist/pages/ShortlistPage'
 import { InterestsPage } from '@/features/interests/pages/InterestsPage'
+import { MatchesPage } from '@/features/matches/pages/MatchesPage'
 import { ChatPage } from '@/features/chat/pages/ChatPage'
 import { NotificationsPage } from '@/features/notifications/pages/NotificationsPage'
 import { ProfilePage } from '@/features/profiles/pages/ProfilePage'
@@ -52,6 +53,7 @@ export function AppRouter() {
             <Route path={routes.search} element={<SearchPage />} />
             <Route path={routes.shortlist} element={<ShortlistPage />} />
             <Route path={routes.interests} element={<InterestsPage />} />
+            <Route path={routes.matches} element={<MatchesPage />} />
             <Route path={routes.chat} element={<ChatPage />} />
             <Route path={routes.notifications} element={<NotificationsPage />} />
             <Route path={routes.profile} element={<ProfilePage />} />

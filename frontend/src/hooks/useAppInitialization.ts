@@ -8,7 +8,7 @@ import { useAuth } from '@/features/auth/hooks/useAuth'
  * Without it the splash would flash for a few milliseconds on a warm cache,
  * which reads as a glitch rather than as a startup sequence.
  */
-const MIN_SPLASH_DURATION = 1200
+const MIN_SPLASH_DURATION = 2500
 
 export type InitializationStatus = 'initializing' | 'ready' | 'failed'
 

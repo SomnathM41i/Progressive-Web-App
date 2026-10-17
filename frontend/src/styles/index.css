@@ -29,8 +29,7 @@
   border-radius: 1.25rem;
   background:
     linear-gradient(0deg, rgba(255, 253, 250, 0.06), rgba(255, 253, 250, 0.06)),
-    url('https://images.unsplash.com/photo-1516589178581-6cd7833ae3b2?auto=format&fit=crop&w=1000&q=85')
-      center 44% / cover;
+    url('../assets/images/welcome-hands.webp') center 44% / cover;
   box-shadow: 0 12px 32px rgba(70, 35, 40, 0.12);
 }
 
@@ -91,9 +90,14 @@
   h1,
   h2,
   h3 {
-    font-family: var(--font-display);
+    font-family: var(--font-sans);
     font-weight: 600;
     letter-spacing: -0.01em;
+  }
+
+  h1.page-title,
+  h2.editorial-title {
+    font-family: var(--font-display);
   }
 
   button {

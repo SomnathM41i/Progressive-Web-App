@@ -49,7 +49,13 @@ const authServiceImpl: AuthService = {
   },
 
   async login({ identifier, password }: LoginCredentials): Promise<AuthSession> {
-    const body = new URLSearchParams({ username: identifier, password })
+    const trimmedIdentifier = identifier.trim()
+    const trimmedPassword = password.trim()
+
+    const body = new URLSearchParams({
+      username: trimmedIdentifier,
+      password: trimmedPassword,
+    })
     const { data } = await api.post<LoginResponse>('/login.php', body)
 
     if (data.status !== 'success' || !data.data) {

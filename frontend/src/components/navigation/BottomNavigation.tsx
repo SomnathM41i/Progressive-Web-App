@@ -45,7 +45,7 @@ export function BottomNavigation() {
               end={to === routes.home}
               className={({ isActive }) =>
                 cn(
-                  'relative flex h-16 flex-col items-center justify-center gap-1 transition active:opacity-60',
+                  'relative flex h-[var(--app-bottom-nav-height)] flex-col items-center justify-center gap-1 transition active:opacity-60',
                   isActive ? 'text-maroon' : 'text-muted hover:text-maroon',
                 )
               }

@@ -7,7 +7,7 @@ type Size = 'sm' | 'md' | 'lg'
 type Variant = 'solid' | 'soft' | 'plain'
 
 const sizes: Record<Size, string> = {
-  sm: 'size-9',
+  sm: 'size-10',
   md: 'size-11',
   lg: 'size-12',
 }

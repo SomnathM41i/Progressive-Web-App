@@ -1,167 +1,83 @@
-import {
-  BadgeCheck,
-  Bookmark,
-  BriefcaseBusiness,
-  ChevronLeft,
-  GraduationCap,
-  Heart,
-  MapPin,
-  Ruler,
-  UserRound,
-} from 'lucide-react'
-import { Link, useLocation, useNavigate } from 'react-router-dom'
+import { useState } from 'react'
+import { BadgeCheck, EllipsisVertical, Heart, MessageCircle } from 'lucide-react'
+import { Link, useLocation } from 'react-router-dom'
 
 import { ComingSoon } from '@/components/states/ComingSoon'
-import { Badge } from '@/components/ui/Badge'
-import { Button } from '@/components/ui/Button'
-import { Card } from '@/components/ui/Card'
+import { ScreenHeader } from '@/components/navigation/ScreenHeader'
+import { AppScreen } from '@/components/ui/AppScreen'
+import { IconButton } from '@/components/ui/IconButton'
 import { routes } from '@/config/routes'
 import type { ProfileDetail } from '@/features/profiles/types'
 import { useShortlist } from '@/features/shortlist/hooks/useShortlist'
 import { useToast } from '@/hooks/useToast'
 
-interface DetailState {
-  profile?: ProfileDetail
+interface DetailState { profile?: ProfileDetail }
+
+const previewDetails: Record<string, Partial<ProfileDetail>> = {
+  'p-2001': { height: '5′8″', education: 'B.E. (Computer)', annualIncome: '6 lakh', caste: 'Maratha', maritalStatus: 'Never married', hometown: 'Pune, Maharashtra' },
+  'p-2002': { height: '5′9″', education: 'M.B.A.', annualIncome: '7 lakh', caste: 'Maratha', maritalStatus: 'Never married', hometown: 'Nashik, Maharashtra' },
+  'p-1001': { height: '5′4″', education: 'B.Ed.', annualIncome: '4 lakh', caste: 'Maratha', maritalStatus: 'Never married', hometown: 'Satara, Maharashtra' },
+  'p-1002': { height: '5′3″', education: 'B.E. (Computer)', annualIncome: '8 lakh', caste: 'Maratha', maritalStatus: 'Never married', hometown: 'Pune, Maharashtra' },
+  'p-1003': { height: '5′5″', education: 'B.Sc. Nursing', annualIncome: '5 lakh', caste: 'Maratha', maritalStatus: 'Never married', hometown: 'Kolhapur, Maharashtra' },
 }
 
 export function ProfileDetailPage() {
-  const navigate = useNavigate()
   const location = useLocation()
-  const { isShortlisted, toggle } = useShortlist()
   const toast = useToast()
+  const { isShortlisted, toggle } = useShortlist()
+  const [interestSent, setInterestSent] = useState(false)
   const profile = (location.state as DetailState | null)?.profile
+  const details = profile ? { ...previewDetails[profile.id], ...profile } : undefined
+
+  if (!profile || !details) {
+    return (
+      <AppScreen>
+        <ScreenHeader title="Profile details" />
+        <main className="min-h-0 flex-1 overflow-y-auto overscroll-y-contain px-4 py-4">
+          <ComingSoon title="Profile details" description="Open a profile from the dashboard or search to see its details here." action={<Link to={routes.home} className="text-xs font-semibold text-maroon">Back to dashboard</Link>} />
+        </main>
+      </AppScreen>
+    )
+  }
+
+  const saved = isShortlisted(profile.id)
+  const rows = [
+    ['Height', details.height],
+    ['Education', details.education],
+    ['Occupation', details.occupation],
+    ['Annual income', details.annualIncome],
+    ['Caste', details.caste],
+    ['Marital status', details.maritalStatus],
+    ['Native place', details.hometown ?? details.location],
+  ]
 
   return (
-    <div className="px-4 pt-4 pb-6">
-      <button
-        type="button"
-        aria-label="Back"
-        onClick={() => void navigate(-1)}
-        className="mb-3 -ml-2 flex size-9 items-center justify-center rounded-full text-maroon transition hover:bg-rose"
-      >
-        <ChevronLeft className="size-5" />
-      </button>
-      {profile ? (
-        <div className="space-y-4">
-          <Card flush className="overflow-hidden">
-            <div className="relative h-72 bg-gradient-to-br from-rose to-rose-dark">
-              {profile.photoUrl ? (
-                <img
-                  src={profile.photoUrl}
-                  alt={`${profile.name}'s profile`}
-                  className="size-full object-cover object-center"
-                />
-              ) : (
-                <div className="flex size-full items-center justify-center">
-                  <UserRound className="size-20 text-maroon/40" />
-                </div>
-              )}
-              <span className="absolute top-3 right-3 rounded-full bg-black/50 px-2.5 py-1 text-xs font-semibold text-white">
-                Profile photo
-              </span>
-            </div>
-            <div className="p-5">
-              <div className="flex flex-wrap items-center gap-2">
-                <h1 className="font-display text-xl text-ink">{profile.name}</h1>
-                {profile.isVerified === true ? (
-                  <Badge tone="success" icon={<BadgeCheck className="size-3.5" />}>
-                    Verified
-                  </Badge>
-                ) : null}
-              </div>
-              <p className="mt-1 text-sm text-muted">
-                {profile.age} yrs · {profile.height ?? 'Height not provided'}
-              </p>
-              <p className="mt-2 flex items-center gap-1.5 text-xs text-muted">
-                <MapPin className="size-3.5 shrink-0" />
-                {profile.location}
-              </p>
-              <div className="mt-5 grid grid-cols-2 gap-2">
-                <Button
-                  fullWidth
-                  className="text-xs"
-                  variant={isShortlisted(profile.id) ? 'outline' : 'primary'}
-                  leadingIcon={
-                    <Bookmark
-                      className="size-4"
-                      fill={isShortlisted(profile.id) ? 'currentColor' : 'none'}
-                    />
-                  }
-                  onClick={() => toggle(profile)}
-                >
-                  {isShortlisted(profile.id) ? 'Saved' : 'Save profile'}
-                </Button>
-                <Button
-                  variant="outline"
-                  className="text-xs"
-                  leadingIcon={<Heart className="size-4" />}
-                  onClick={() =>
-                    toast.info(
-                      'Interest requests will be available when your account is connected',
-                    )
-                  }
-                >
-                  Send interest
-                </Button>
-              </div>
-            </div>
-          </Card>
-          <Card>
-            <h2 className="text-base font-semibold text-maroon">Personal details</h2>
-            <dl className="mt-3 divide-y divide-line text-sm">
-              {[
-                {
-                  label: 'Height',
-                  value: profile.height ?? 'Not provided',
-                  icon: Ruler,
-                },
-                {
-                  label: 'Education',
-                  value: profile.education ?? 'Not provided',
-                  icon: GraduationCap,
-                },
-                {
-                  label: 'Occupation',
-                  value: profile.occupation ?? 'Not provided',
-                  icon: BriefcaseBusiness,
-                },
-                {
-                  label: 'Marital status',
-                  value: profile.maritalStatus ?? 'Not provided',
-                  icon: Heart,
-                },
-                { label: 'Location', value: profile.location, icon: MapPin },
-              ].map(({ label, value, icon: Icon }) => (
-                <div
-                  key={label}
-                  className="flex items-center gap-3 py-3 first:pt-0 last:pb-0"
-                >
-                  <Icon className="size-4 shrink-0 text-maroon" />
-                  <dt className="w-28 shrink-0 text-muted">{label}</dt>
-                  <dd className="text-ink">{value}</dd>
-                </div>
-              ))}
-            </dl>
-          </Card>
-          <p className="text-center text-xs text-muted">
-            Profile preview. Details are sample content.
-          </p>
+    <AppScreen>
+      <ScreenHeader title="Profile details" trailing={<IconButton label="More profile options" size="sm" variant="plain" onClick={() => toast.info('More profile options will be available soon')}><EllipsisVertical className="size-[18px]" /></IconButton>} />
+
+      <main className="min-h-0 flex-1 overflow-y-auto overscroll-y-contain pb-4">
+        <div className="relative mx-3 mt-2 h-[25vh] min-h-44 max-h-56 overflow-hidden rounded-xl bg-rose shadow-soft">
+          {profile.photoUrl ? <img src={profile.photoUrl} alt={`${profile.name}'s profile`} className="size-full object-cover object-[center_34%]" /> : <div className="flex size-full items-center justify-center text-5xl font-semibold text-maroon">{profile.name.slice(0, 1)}</div>}
+          <span className="absolute top-2 right-2 rounded-full bg-black/55 px-2 py-1 text-[10px] font-medium text-white">1 / 1</span>
+          <button type="button" aria-label={saved ? 'Remove from shortlist' : 'Add to shortlist'} aria-pressed={saved} onClick={() => toggle(profile)} className="absolute right-2 bottom-2 flex size-9 items-center justify-center rounded-full bg-white text-maroon shadow-card"><Heart className="size-[18px]" fill={saved ? 'currentColor' : 'none'} /></button>
         </div>
-      ) : (
-        <ComingSoon
-          title="Profile details"
-          description="Open a profile from the dashboard or search to see its details here."
-          action={
-            <Link
-              to={routes.home}
-              className="inline-flex items-center gap-1.5 text-xs font-semibold text-maroon hover:text-maroon-dark"
-            >
-              <UserRound className="size-3.5" />
-              Back to dashboard
-            </Link>
-          }
-        />
-      )}
-    </div>
+
+        <section className="px-4 pt-2.5">
+          <div className="flex items-center gap-1.5"><h2 className="truncate text-base font-semibold text-ink">{profile.name}</h2>{profile.isVerified ? <BadgeCheck className="size-4 shrink-0 fill-emerald-600 text-white" aria-label="Verified" /> : null}</div>
+          <p className="mt-0.5 text-[11px] text-muted">{profile.age} yrs, {details.height ?? 'Height not provided'}, {profile.location}</p>
+          <div className="mt-2 flex flex-wrap gap-1.5">{[profile.gender, details.education, details.occupation].filter(Boolean).map((tag) => <span key={tag} className="rounded-full border border-line bg-white px-2.5 py-1 text-[10px] text-muted">{tag}</span>)}</div>
+        </section>
+
+        <section className="px-4 pt-3 pb-1">
+          <h3 className="mb-1 text-xs font-semibold text-maroon">Personal details</h3>
+          <dl className="divide-y divide-line/80">{rows.map(([label, value]) => <div key={label} className="grid grid-cols-[43%_57%] gap-2 py-1 text-[10px] leading-tight"><dt className="text-muted">{label}</dt><dd className="text-ink">{value ?? 'Not provided'}</dd></div>)}</dl>
+        </section>
+      </main>
+
+      <footer className="grid shrink-0 grid-cols-2 gap-2 border-t border-line bg-white px-3 py-2.5">
+        <button type="button" onClick={() => { setInterestSent(true); toast.info('Interest requests will be available when your account is connected') }} className="inline-flex h-10 items-center justify-center gap-1.5 rounded-full border border-maroon px-2 text-[11px] font-semibold text-maroon hover:bg-rose"><Heart className="size-4" />{interestSent ? 'Interest sent' : 'Send interest'}</button>
+        <Link to={routes.chat} className="inline-flex h-10 items-center justify-center gap-1.5 rounded-full bg-maroon px-2 text-[11px] font-semibold text-white shadow-brand hover:bg-maroon-dark"><MessageCircle className="size-4" />Chat now</Link>
+      </footer>
+    </AppScreen>
   )
 }

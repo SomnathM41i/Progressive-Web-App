@@ -12,6 +12,12 @@ export interface ProfilePreview {
   location: string
   occupation?: string
   gender?: 'Bride' | 'Groom'
+  education?: string
+  height?: string
+  annualIncome?: string
+  caste?: string
+  maritalStatus?: string
+  hometown?: string
   /** Absent or null renders the branded monogram avatar. */
   photoUrl?: string | null
   /** Only rendered when the backend explicitly confirms verification. */
@@ -22,8 +28,5 @@ export interface ProfilePreview {
 /** Extra detail shown on a full profile screen; most fields are pending the API. */
 export interface ProfileDetail extends ProfilePreview {
   about?: string
-  education?: string
   family?: string
-  height?: string
-  maritalStatus?: string
 }

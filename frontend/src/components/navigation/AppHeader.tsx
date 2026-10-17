@@ -3,10 +3,8 @@ import { useEffect, useState } from 'react'
 import { Link, NavLink } from 'react-router-dom'
 
 import logo from '@/assets/images/shivraj-logo.png'
-import { Avatar } from '@/components/ui/Avatar'
 import { IconLink } from '@/components/ui/IconButton'
 import { routes } from '@/config/routes'
-import { useAuth } from '@/features/auth/hooks/useAuth'
 import { cn } from '@/lib/cn'
 
 const desktopNavItems = [
@@ -17,7 +15,6 @@ const desktopNavItems = [
 ]
 
 export function AppHeader() {
-  const { user } = useAuth()
   const [scrolled, setScrolled] = useState(false)
   const [menuOpen, setMenuOpen] = useState(false)
   useEffect(() => {
@@ -34,7 +31,7 @@ export function AppHeader() {
         scrolled ? 'shadow-bar' : 'shadow-none',
       )}
     >
-      <div className="relative mx-auto flex h-15 max-w-lg items-center justify-between gap-2 px-3 md:max-w-2xl md:px-4">
+      <div className="relative mx-auto flex h-[var(--app-main-header-height)] max-w-lg items-center justify-between gap-2 px-3 md:max-w-2xl md:px-4">
         <button
           aria-label={menuOpen ? 'Close menu' : 'Open menu'}
           aria-expanded={menuOpen}
@@ -82,13 +79,6 @@ export function AppHeader() {
           <IconLink label="Notifications" to={routes.notifications} size="sm">
             <Bell className="size-4.5" aria-hidden="true" />
           </IconLink>
-          <Link
-            to={routes.profile}
-            aria-label="Profile"
-            className="rounded-full transition active:scale-95"
-          >
-            <Avatar src={user?.avatarUrl} name={user?.name ?? 'Member'} size="sm" />
-          </Link>
         </div>
         {menuOpen ? (
           <nav

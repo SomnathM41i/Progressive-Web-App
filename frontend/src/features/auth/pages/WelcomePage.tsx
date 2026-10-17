@@ -4,19 +4,9 @@ import { useNavigate } from 'react-router-dom'
 import logo from '@/assets/images/shivraj-logo.png'
 import { Button } from '@/components/ui/Button'
 import { routes } from '@/config/routes'
-import { useAuth } from '@/features/auth/hooks/useAuth'
-import { useToast } from '@/hooks/useToast'
-import { env } from '@/config/env'
 
 export function WelcomePage() {
   const navigate = useNavigate()
-  const toast = useToast()
-  const { login } = useAuth()
-  async function handlePreview() {
-    await login({ identifier: 'preview', password: 'preview' })
-    toast.success('Preview mode started')
-    void navigate(routes.home, { replace: true })
-  }
   return (
     <div className="welcome-screen flex flex-1 flex-col px-6 pt-safe pb-safe">
       <div className="relative flex flex-1 flex-col items-center justify-center py-8 text-center">
@@ -74,16 +64,6 @@ export function WelcomePage() {
         >
           Log in
         </Button>
-        {env.devPreview ? (
-          <Button
-            fullWidth
-            size="sm"
-            variant="ghost"
-            onClick={() => void handlePreview()}
-          >
-            Open preview
-          </Button>
-        ) : null}
       </div>
     </div>
   )

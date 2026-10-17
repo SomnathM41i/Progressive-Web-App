@@ -1,85 +1,58 @@
-import { useState } from 'react'
-import { Check, Heart, X } from 'lucide-react'
+import { useRef, useState } from 'react'
 
-import { Page } from '@/components/ui/Page'
+import { ScreenHeader } from '@/components/navigation/ScreenHeader'
+import { AppScreen } from '@/components/ui/AppScreen'
+import { env } from '@/config/env'
 
-const requests = [
-  { name: 'स्वाती जोशी', age: 26, city: 'मुंबई', work: 'Teacher', status: 'New' },
-  { name: 'पूजा कुलकर्णी', age: 25, city: 'पुणे', work: 'Doctor', status: 'New' },
-  { name: 'माधुरी कदम', age: 24, city: 'नाशिक', work: 'Engineer', status: 'Viewed' },
+const sampleRequests = [
+  { id: 'i-1', name: 'स्वाती जोशी', age: 26, city: 'मुंबई', details: 'B.Ed., Teacher', photo: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=180&h=220&q=80' },
+  { id: 'i-2', name: 'पूजा कुलकर्णी', age: 25, city: 'पुणे', details: 'BCA, Software engineer', photo: 'https://images.unsplash.com/photo-1531123897727-8f129e1688ce?auto=format&fit=crop&w=180&h=220&q=80' },
+  { id: 'i-3', name: 'प्राजक्ता कदम', age: 24, city: 'नाशिक', details: 'MBA, Banking', photo: 'https://images.unsplash.com/photo-1524504388940-b1c1722653e1?auto=format&fit=crop&w=180&h=220&q=80' },
+  { id: 'i-4', name: 'किरण शिंदे', age: 28, city: 'पुणे', details: 'MBA, Engineer', photo: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&w=180&h=220&q=80' },
 ]
+
+const requests = env.devPreview ? sampleRequests : []
 
 export function InterestsPage() {
   const [tab, setTab] = useState<'received' | 'sent'>('received')
-  const [hidden, setHidden] = useState<string[]>([])
-  const visible = requests.filter((request) => !hidden.includes(request.name))
+  const [dismissed, setDismissed] = useState<string[]>([])
+  const scrollContainerRef = useRef<HTMLDivElement>(null)
+  const received = requests.filter((request) => !dismissed.includes(request.id))
+  const visibleRequests = tab === 'received' ? received : requests.slice(1, 3)
+
+  function changeTab(nextTab: 'received' | 'sent') {
+    setTab(nextTab)
+    if (scrollContainerRef.current) scrollContainerRef.current.scrollTop = 0
+  }
+
+  function dismissRequest(requestId: string) {
+    setDismissed((current) => [...current, requestId])
+  }
+
   return (
-    <Page
-      title="Interests"
-      subtitle="Manage requests from people who like your profile."
-    >
-      <div className="grid grid-cols-2 border-b border-line text-center text-sm">
-        {(['received', 'sent'] as const).map((value) => (
-          <button
-            key={value}
-            onClick={() => setTab(value)}
-            className={`border-b-2 py-3 font-semibold ${tab === value ? 'border-maroon text-maroon' : 'border-transparent text-muted'}`}
-          >
-            {value === 'received' ? 'Received' : 'Sent'}
-          </button>
-        ))}
-      </div>
-      <ul className="space-y-3">
-        {(tab === 'received' ? visible : requests.slice(1)).map((request, index) => (
-          <li
-            key={request.name}
-            className="flex items-center gap-3 rounded-2xl border border-line bg-white p-3 shadow-soft"
-          >
-            <div
-              className={`flex size-16 shrink-0 items-center justify-center rounded-xl text-2xl ${index % 2 ? 'bg-rose' : 'bg-amber-50'}`}
-            >
-              {index % 2 ? '👩🏻' : '👩🏽'}
-            </div>
-            <div className="min-w-0 flex-1">
-              <p className="truncate font-semibold text-ink">{request.name}</p>
-              <p className="mt-0.5 text-xs text-muted">
-                {request.age} yrs · {request.city}
-              </p>
-              <p className="text-xs text-muted">{request.work}</p>
-              <span className="mt-1 inline-block rounded-full bg-rose px-2 py-0.5 text-2xs font-semibold text-maroon">
-                {request.status}
-              </span>
-            </div>
-            {tab === 'received' && (
-              <div className="flex flex-col gap-2">
-                <button
-                  aria-label="Accept interest"
-                  onClick={() => setHidden([...hidden, request.name])}
-                  className="flex size-9 items-center justify-center rounded-full bg-emerald-600 text-white"
-                >
-                  <Check className="size-4" />
-                </button>
-                <button
-                  aria-label="Decline interest"
-                  onClick={() => setHidden([...hidden, request.name])}
-                  className="flex size-9 items-center justify-center rounded-full border border-line text-muted"
-                >
-                  <X className="size-4" />
-                </button>
-              </div>
-            )}
-          </li>
-        ))}
-      </ul>
-      {visible.length === 0 && tab === 'received' ? (
-        <div className="rounded-2xl bg-white p-8 text-center text-sm text-muted">
-          <Heart className="mx-auto mb-3 size-7 text-maroon" />
-          You’re all caught up.
+    <AppScreen safeBottom={false}>
+      <div ref={scrollContainerRef} className="min-h-0 flex-1 overflow-y-auto overscroll-y-contain">
+        <ScreenHeader title="Interests" />
+
+        <div className="grid h-10 shrink-0 grid-cols-2 border-b border-line bg-white text-center text-[11px]">
+          <button type="button" onClick={() => changeTab('received')} className={`relative font-semibold ${tab === 'received' ? 'text-maroon' : 'text-muted'}`}>Received{tab === 'received' ? <span className="absolute inset-x-4 bottom-0 h-0.5 rounded-full bg-maroon" /> : null}</button>
+          <button type="button" onClick={() => changeTab('sent')} className={`relative font-semibold ${tab === 'sent' ? 'text-maroon' : 'text-muted'}`}>Sent{tab === 'sent' ? <span className="absolute inset-x-4 bottom-0 h-0.5 rounded-full bg-maroon" /> : null}</button>
         </div>
-      ) : null}
-      <p className="text-center text-xs text-muted">
-        Sample requests shown until your account is connected.
-      </p>
-    </Page>
+
+        <div className="px-3">
+          {visibleRequests.length ? <ul className="divide-y divide-[#f1ecea]">{visibleRequests.map((request) => (
+            <li key={request.id} className="flex min-h-[5.75rem] items-center gap-2.5 py-2.5">
+              <img src={request.photo} alt="" loading="lazy" className="h-[4.1rem] w-[3.15rem] shrink-0 rounded-lg object-cover" />
+              <div className="min-w-0 flex-1">
+                <p className="truncate text-[11px] font-semibold text-ink">{request.name}</p>
+                <p className="mt-0.5 text-[10px] text-muted">{request.age} yrs, {request.city}</p>
+                <p className="truncate text-[10px] text-muted">{request.details}</p>
+                {tab === 'received' ? <div className="mt-1.5 flex gap-1.5"><button type="button" onClick={() => dismissRequest(request.id)} className="h-6 min-w-[3.4rem] rounded-md bg-[#2d9b5b] px-2 text-[10px] font-semibold text-white">Accept</button><button type="button" onClick={() => dismissRequest(request.id)} className="h-6 min-w-[3.4rem] rounded-md border border-[#b82b3e] px-2 text-[10px] font-semibold text-[#a91931]">Decline</button></div> : <p className="mt-1.5 text-[10px] font-medium text-maroon">Interest sent</p>}
+              </div>
+            </li>
+          ))}</ul> : <div className="px-4 py-12 text-center text-xs text-muted">{requests.length ? 'No interests in this section yet.' : 'Your interest requests will appear here when your account is connected.'}</div>}
+        </div>
+      </div>
+    </AppScreen>
   )
 }

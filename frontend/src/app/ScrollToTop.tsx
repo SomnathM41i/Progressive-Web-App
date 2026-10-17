@@ -2,11 +2,10 @@ import { useEffect } from 'react'
 import { useLocation } from 'react-router-dom'
 
 /**
- * Resets the viewport to the top whenever the route changes.
+ * Resets document scrolling whenever the route changes.
  *
- * The app scrolls inside the window (no per-page scroll containers), so
- * without this a tab switch would land halfway down the previous screen — the
- * opposite of what a native app does.
+ * Full-screen routes own their scroll containers and remount with the keyed
+ * outlet in AppLayout, which resets their internal scroll position as well.
  */
 export function ScrollToTop() {
   const { pathname } = useLocation()

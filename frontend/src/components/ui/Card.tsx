@@ -12,7 +12,7 @@ export function Card({ flush = false, className, children, ...rest }: CardProps)
     <div
       className={cn(
         'rounded-card border border-line bg-surface shadow-soft',
-        !flush && 'p-5',
+        !flush && 'p-[var(--card-padding)]',
         className,
       )}
       {...rest}
