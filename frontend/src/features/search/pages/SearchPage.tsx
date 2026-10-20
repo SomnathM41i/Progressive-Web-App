@@ -123,9 +123,13 @@ export function SearchPage() {
           {hasSearched ? (
             <section className="pb-5 pt-3">
               <div className="mb-3 flex items-center justify-between"><h2 className="text-sm font-semibold text-ink">Search results</h2><span className="text-xs text-muted">{matches.length} profiles</span></div>
-              {matches.length ? <ul className="grid grid-cols-2 gap-3">{matches.map((profile) => <li key={profile.id}><ProfileCard profile={profile} className="w-full" /></li>)}</ul> : <p className="rounded-xl bg-white p-4 text-center text-xs text-muted">{sampleProfiles.length ? 'No matches found. Try adjusting your filters.' : 'Search results will appear here when profiles are connected.'}</p>}
+              {matches.length ? <ul className="grid grid-cols-1 gap-4">{matches.map((profile) => <li key={profile.id}><ProfileCard profile={profile} className="w-full" /></li>)}</ul> : <p className="rounded-xl bg-white p-4 text-center text-xs text-muted">{sampleProfiles.length ? 'No matches found. Try adjusting your filters.' : 'Search results will appear here when profiles are connected.'}</p>}
             </section>
-          ) : null}
+          ) : sampleProfiles.length ? null : (
+            <p className="mt-4 rounded-xl bg-white p-4 text-center text-xs text-muted">
+              Filters are ready, but results will appear once search is connected to the API.
+            </p>
+          )}
         </div>
       </div>
 

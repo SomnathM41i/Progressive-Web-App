@@ -84,6 +84,9 @@ export function ChatPage() {
         aria-live="polite"
         className="flex min-h-0 flex-1 flex-col gap-2.5 overflow-y-auto overscroll-y-contain px-3 py-3"
       >
+        <p className="mx-auto max-w-[92%] rounded-full bg-cream-dark px-3 py-1 text-center text-[10px] text-muted">
+          Messaging will be available once your account is connected.
+        </p>
         {messages.map((message, index) => (
           <div
             key={`${message.time}-${index}`}

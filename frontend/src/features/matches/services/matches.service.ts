@@ -1,4 +1,5 @@
 import type { ProfilePreview } from '@/features/profiles/types'
+import { resolveMediaUrl } from '@/features/profiles/media'
 import type {
   MutualMatchApiResponse,
   MutualMatchResult,
@@ -6,22 +7,47 @@ import type {
 import { api } from '@/services/api'
 import { ApiError } from '@/services/api-error'
 
-const BASE_PHOTO_URL = 'https://shivrajmaratha.com'
-
-function buildPhotoUrl(photoUrl?: string): string | null {
-  if (!photoUrl) return null
-  if (photoUrl.startsWith('http')) return photoUrl
-  if (photoUrl.startsWith('/')) return `${BASE_PHOTO_URL}${photoUrl}`
-  return `${BASE_PHOTO_URL}/${photoUrl}`
+/**
+ * Interprets the `status` field.
+ *
+ * This API answers HTTP 200 for failures too, so `status` decides. The exact
+ * positive value is unconfirmed, so anything that is not a recognised failure
+ * is treated as success; failures (`error`, `failed`, `0`, `false`) still raise
+ * with the server message.
+ */
+function isFailure(status: unknown): boolean {
+  if (status === 0 || status === false) return true
+  if (typeof status === 'string') {
+    const normalised = status.trim().toLowerCase()
+    return (
+      normalised === 'error' ||
+      normalised === 'failed' ||
+      normalised === 'fail' ||
+      normalised === '0'
+    )
+  }
+  return false
 }
 
-function mapToProfilePreview(result: MutualMatchResult): ProfilePreview {
+/** Rejects non-JSON bodies (proxy pages, bot challenges) before they are read. */
+function ensureJsonBody(data: unknown): void {
+  if (typeof data !== 'object' || data === null || Array.isArray(data)) {
+    throw new ApiError({
+      message: 'The server returned an unexpected response. Please try again.',
+    })
+  }
+}
+
+function mapToProfilePreview(result: MutualMatchResult): ProfilePreview | null {
+  const id = typeof result.MatriID === 'string' ? result.MatriID.trim() : ''
+  if (!id) return null
+
   const location = [result.District, result.State].filter(Boolean).join(', ')
   const gender = result.Gender?.toLowerCase() === 'female' ? 'Bride' : 'Groom'
 
   return {
-    id: result.MatriID,
-    name: result.Name,
+    id,
+    name: result.Name?.trim() || 'Member',
     age: Number(result.Age) || 0,
     location: location || 'Not specified',
     occupation: result.Occupation || undefined,
@@ -30,7 +56,7 @@ function mapToProfilePreview(result: MutualMatchResult): ProfilePreview {
     height: result.Height || undefined,
     caste: result.Caste || undefined,
     maritalStatus: result.Maritalstatus || undefined,
-    photoUrl: buildPhotoUrl(result.photo_url),
+    photoUrl: resolveMediaUrl(result.photo_url),
     isVerified: result.Status === 'Paid',
     isNew: false,
   }
@@ -48,13 +74,19 @@ const matchesServiceImpl: MatchesService = {
       body,
     )
 
-    if (data.status !== 'success') {
+    ensureJsonBody(data)
+
+    if (isFailure(data.status)) {
       throw new ApiError({
         message: data.message || 'Failed to fetch mutual matches',
       })
     }
 
-    return (data.results || []).map(mapToProfilePreview)
+    const rows = Array.isArray(data.results) ? data.results : []
+
+    return rows
+      .map(mapToProfilePreview)
+      .filter((profile): profile is ProfilePreview => profile !== null)
   },
 }
 

@@ -6,6 +6,7 @@ import { Badge } from '@/components/ui/Badge'
 import { ProgressBar } from '@/components/ui/ProgressBar'
 import { routes } from '@/config/routes'
 import type { ProfileSummary } from '@/features/dashboard/types'
+import { useMyPhoto } from '@/features/profiles/hooks/useMyPhoto'
 
 interface ProfileSummaryCardProps {
   summary: ProfileSummary
@@ -18,6 +19,7 @@ interface ProfileSummaryCardProps {
  * verification, so an unverified profile never looks approved.
  */
 export function ProfileSummaryCard({ summary }: ProfileSummaryCardProps) {
+  const { photoUrl } = useMyPhoto()
   const isComplete = summary.completion >= 100
 
   return (
@@ -33,7 +35,7 @@ export function ProfileSummaryCard({ summary }: ProfileSummaryCardProps) {
 
       <div className="relative flex items-start gap-4">
         <Avatar
-          src={summary.photoUrl}
+          src={photoUrl ?? summary.photoUrl}
           name={summary.name}
           size="lg"
           className="ring-white/25"

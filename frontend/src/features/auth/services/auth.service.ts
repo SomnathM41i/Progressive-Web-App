@@ -27,6 +27,31 @@ interface LoginResponse {
   }
 }
 
+/**
+ * Reads the API's `status` field tolerantly.
+ *
+ * The backend answers HTTP 200 even for failures, and the exact positive value
+ * has only ever been observed as `success`; `Success` and `1` are treated the
+ * same so a casing or numeric variant does not lock a valid member out.
+ */
+function isSuccess(status: unknown): boolean {
+  if (status === 1 || status === true) return true
+  if (typeof status === 'string') {
+    const normalised = status.trim().toLowerCase()
+    return normalised === 'success' || normalised === '1' || normalised === 'ok'
+  }
+  return false
+}
+
+/** True when a parsed value looks like a usable persisted session. */
+function isValidSession(value: unknown): value is AuthSession {
+  if (typeof value !== 'object' || value === null) return false
+  const user = (value as { user?: unknown }).user
+  if (typeof user !== 'object' || user === null) return false
+  const profileId = (user as { profileId?: unknown }).profileId
+  return typeof profileId === 'string' && profileId.trim().length > 0
+}
+
 function persist(session: AuthSession | null): void {
   if (session) {
     sessionStore.write(SESSION_KEY, JSON.stringify(session))
@@ -41,7 +66,12 @@ const authServiceImpl: AuthService = {
     if (!raw) return null
 
     try {
-      return JSON.parse(raw) as AuthSession
+      const parsed: unknown = JSON.parse(raw)
+      if (!isValidSession(parsed)) {
+        sessionStore.remove(SESSION_KEY)
+        return null
+      }
+      return parsed
     } catch {
       sessionStore.remove(SESSION_KEY)
       return null
@@ -58,17 +88,26 @@ const authServiceImpl: AuthService = {
     })
     const { data } = await api.post<LoginResponse>('/login.php', body)
 
-    if (data.status !== 'success' || !data.data) {
+    if (!isSuccess(data.status) || !data.data) {
       throw new ApiError({
         message: data.message || 'Invalid username or password',
       })
     }
 
+    const matriId = typeof data.data.MatriID === 'string' ? data.data.MatriID.trim() : ''
+    const name = typeof data.data.Name === 'string' ? data.data.Name.trim() : ''
+
+    if (!matriId) {
+      throw new ApiError({
+        message: data.message || 'Login succeeded but the profile id was missing.',
+      })
+    }
+
     const session: AuthSession = {
       user: {
-        id: data.data.MatriID,
-        name: data.data.Name,
-        profileId: data.data.MatriID,
+        id: matriId,
+        name: name || 'Member',
+        profileId: matriId,
         email: data.data.Email ?? null,
         phone: data.data.Mobile ?? null,
       },

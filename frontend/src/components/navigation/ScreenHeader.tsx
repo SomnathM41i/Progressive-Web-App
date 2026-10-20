@@ -22,7 +22,7 @@ export function ScreenHeader({ title, trailing, className, onBack }: ScreenHeade
       <IconButton label="Go back" size="md" variant="plain" onClick={handleBack} className="absolute left-1.5">
         <ChevronLeft className="size-5" aria-hidden="true" />
       </IconButton>
-      <h1 className="max-w-[calc(100%-7rem)] truncate text-sm font-semibold text-ink">{title}</h1>
+      <h1 className="max-w-[calc(100%-7rem)] truncate text-base font-semibold text-ink">{title}</h1>
       {trailing ? <div className="absolute right-2 flex items-center">{trailing}</div> : null}
     </header>
   )

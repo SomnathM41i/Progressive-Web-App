@@ -11,6 +11,15 @@ const toneStyles: Record<Announcement['tone'], { icon: LucideIcon; wrap: string 
   warning: { icon: TriangleAlert, wrap: 'bg-warning-soft text-warning' },
 }
 
+const FALLBACK_TONE = toneStyles.info
+
+/** Formats an announcement date, returning null when it cannot be parsed. */
+function formatAnnouncementDate(value: string): string | null {
+  const date = new Date(value)
+  if (Number.isNaN(date.getTime())) return null
+  return dateFormatter.format(date)
+}
+
 const dateFormatter = new Intl.DateTimeFormat('mr-IN', {
   day: 'numeric',
   month: 'short',
@@ -30,7 +39,9 @@ export function AnnouncementsCard({ announcements }: AnnouncementsCardProps) {
 
       <ul className="divide-y divide-line">
         {announcements.map((announcement) => {
-          const { icon: Icon, wrap } = toneStyles[announcement.tone]
+          // A tone the API does not recognise must not crash the whole card.
+          const { icon: Icon, wrap } = toneStyles[announcement.tone] ?? FALLBACK_TONE
+          const date = formatAnnouncementDate(announcement.createdAt)
 
           return (
             <li key={announcement.id} className="flex gap-3 px-5 py-3.5">
@@ -48,12 +59,14 @@ export function AnnouncementsCard({ announcements }: AnnouncementsCardProps) {
                   <p className="truncate text-sm font-semibold text-ink">
                     {announcement.title}
                   </p>
-                  <time
-                    dateTime={announcement.createdAt}
-                    className="shrink-0 text-2xs text-muted"
-                  >
-                    {dateFormatter.format(new Date(announcement.createdAt))}
-                  </time>
+                  {date ? (
+                    <time
+                      dateTime={announcement.createdAt}
+                      className="shrink-0 text-2xs text-muted"
+                    >
+                      {date}
+                    </time>
+                  ) : null}
                 </div>
                 <p className="mt-0.5 text-xs leading-relaxed text-muted">
                   {announcement.body}

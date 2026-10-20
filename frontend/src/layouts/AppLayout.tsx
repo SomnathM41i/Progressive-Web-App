@@ -1,5 +1,6 @@
 import { useLocation, Outlet } from 'react-router-dom'
 
+import { ErrorBoundary } from '@/app/ErrorBoundary'
 import { BottomNavigation } from '@/components/navigation/BottomNavigation'
 import { AppHeader } from '@/components/navigation/AppHeader'
 import { PwaUpdatePrompt } from '@/components/feedback/PwaUpdatePrompt'
@@ -15,16 +16,24 @@ import { routes } from '@/config/routes'
  */
 export function AppLayout() {
   const location = useLocation()
-  const isChatScreen = location.pathname === routes.chat
-  const isProfileDetailScreen = location.pathname.startsWith('/profiles/')
-  const isSearchScreen = location.pathname === routes.search
-  const isMatchesScreen = location.pathname === routes.matches
-  const isShortlistScreen = location.pathname === routes.shortlist
-  const isOwnProfileScreen = location.pathname === routes.profile
-  const isProfileEditScreen = location.pathname === routes.profileEdit
-  const isInterestsScreen = location.pathname === routes.interests
-  const isMembershipScreen = location.pathname === routes.membership
-  const isStandaloneScreen = isChatScreen || isProfileDetailScreen || isSearchScreen
+  const { pathname } = location
+  const isChatScreen = pathname === routes.chat
+  const isProfileDetailScreen = pathname.startsWith(`${routes.profile}s/`)
+  const isSearchScreen = pathname === routes.search
+  const isMatchesScreen = pathname === routes.matches
+  const isShortlistScreen = pathname === routes.shortlist
+  const isOwnProfileScreen = pathname === routes.profile
+  const isProfileEditScreen = pathname === routes.profileEdit
+  // Every "/profile/..." sub-screen (basic, contact, …) is its own full-screen
+  // page with a ScreenHeader, so it hides the app chrome like the overview does.
+  const isProfileSubScreen = pathname.startsWith(`${routes.profile}/`) && !isProfileEditScreen
+  const isInterestsScreen = pathname === routes.interests
+  const isMembershipScreen = pathname === routes.membership
+  const isStandaloneScreen =
+    isChatScreen ||
+    isProfileDetailScreen ||
+    isSearchScreen ||
+    isProfileSubScreen
   const isFullScreenScreen = isStandaloneScreen || isMembershipScreen || isMatchesScreen || isShortlistScreen || isOwnProfileScreen || isProfileEditScreen
   const isHeaderlessScreen = isFullScreenScreen || isInterestsScreen
 
@@ -34,7 +43,9 @@ export function AppLayout() {
 
       <main className={isFullScreenScreen ? 'mx-auto h-dvh w-full max-w-lg overflow-hidden md:max-w-2xl' : isInterestsScreen ? 'mx-auto h-[calc(100dvh-var(--app-bottom-nav-height)-env(safe-area-inset-bottom,0px))] w-full max-w-lg overflow-hidden md:h-dvh md:max-w-2xl' : 'mx-auto min-h-0 w-full max-w-lg flex-1 pb-[calc(var(--app-bottom-nav-height)+env(safe-area-inset-bottom,0px))] md:max-w-2xl md:pb-6'}>
         <div key={location.pathname} className={isFullScreenScreen || isInterestsScreen ? 'h-full min-h-0' : 'animate-rise'}>
-          <Outlet />
+          <ErrorBoundary key={location.pathname} title="This screen could not be displayed">
+            <Outlet />
+          </ErrorBoundary>
         </div>
       </main>
 

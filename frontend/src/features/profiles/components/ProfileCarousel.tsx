@@ -10,7 +10,7 @@ export function ProfileCarousel({ profiles }: ProfileCarouselProps) {
   return (
     <ul className="-mx-4 flex snap-x snap-mandatory [scrollbar-width:none] gap-3 overflow-x-auto px-4 pb-1 [&::-webkit-scrollbar]:hidden">
       {profiles.map((profile) => (
-        <li key={profile.id} className="shrink-0 snap-start">
+        <li key={profile.id} className="w-40 shrink-0 snap-start">
           <ProfileCard profile={profile} />
         </li>
       ))}

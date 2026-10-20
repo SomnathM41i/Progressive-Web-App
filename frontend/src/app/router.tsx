@@ -20,6 +20,17 @@ import { ChatPage } from '@/features/chat/pages/ChatPage'
 import { NotificationsPage } from '@/features/notifications/pages/NotificationsPage'
 import { ProfilePage } from '@/features/profiles/pages/ProfilePage'
 import { ProfileEditPage } from '@/features/profiles/pages/ProfileEditPage'
+import { ProfileBasicPage } from '@/features/profiles/pages/ProfileBasicPage'
+import { ProfileContactPage } from '@/features/profiles/pages/ProfileContactPage'
+import { ProfileEducationPage } from '@/features/profiles/pages/ProfileEducationPage'
+import { ProfileFamilyPage } from '@/features/profiles/pages/ProfileFamilyPage'
+import { ProfileHoroscopePage } from '@/features/profiles/pages/ProfileHoroscopePage'
+import { ProfilePartnerPreferencePage } from '@/features/profiles/pages/ProfilePartnerPreferencePage'
+import { ProfilePhotosPage } from '@/features/profiles/pages/ProfilePhotosPage'
+import { ProfileDocumentsPage } from '@/features/profiles/pages/ProfileDocumentsPage'
+import { ProfileBiodataPage } from '@/features/profiles/pages/ProfileBiodataPage'
+import { ProfileSettingsPage } from '@/features/profiles/pages/ProfileSettingsPage'
+import { ProfileMembershipPage } from '@/features/profiles/pages/ProfileMembershipPage'
 import { ProfileDetailPage } from '@/features/profiles/pages/ProfileDetailPage'
 import { BrowsePage } from '@/features/profiles/pages/BrowsePage'
 import { MembershipPage } from '@/features/membership/pages/MembershipPage'
@@ -58,6 +69,23 @@ export function AppRouter() {
             <Route path={routes.notifications} element={<NotificationsPage />} />
             <Route path={routes.profile} element={<ProfilePage />} />
             <Route path={routes.profileEdit} element={<ProfileEditPage />} />
+            <Route path={routes.profileBasic} element={<ProfileBasicPage />} />
+            <Route path={routes.profileContact} element={<ProfileContactPage />} />
+            <Route path={routes.profileEducation} element={<ProfileEducationPage />} />
+            <Route path={routes.profileFamily} element={<ProfileFamilyPage />} />
+            <Route path={routes.profileHoroscope} element={<ProfileHoroscopePage />} />
+            <Route
+              path={routes.profilePartnerPreference}
+              element={<ProfilePartnerPreferencePage />}
+            />
+            <Route path={routes.profilePhotos} element={<ProfilePhotosPage />} />
+            <Route path={routes.profileDocuments} element={<ProfileDocumentsPage />} />
+            <Route path={routes.profileBiodata} element={<ProfileBiodataPage />} />
+            <Route path={routes.profileSettings} element={<ProfileSettingsPage />} />
+            <Route
+              path={routes.profileMembership}
+              element={<ProfileMembershipPage />}
+            />
             <Route path={routes.profileDetail} element={<ProfileDetailPage />} />
             <Route path={routes.browse} element={<BrowsePage />} />
             <Route path={routes.membership} element={<MembershipPage />} />

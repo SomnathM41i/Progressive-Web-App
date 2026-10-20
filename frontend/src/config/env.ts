@@ -14,11 +14,38 @@ function readNumber(value: string | undefined, fallback: number): number {
   return Number.isFinite(parsed) && parsed > 0 ? parsed : fallback
 }
 
+/**
+ * Normalises and validates the API base URL.
+ *
+ * A missing or malformed value is reported in development rather than silently
+ * shipping requests to the wrong origin. The value is trimmed and any trailing
+ * slash removed so path joins stay predictable.
+ */
+function readApiBaseUrl(value: string | undefined): string {
+  const trimmed = value?.trim() ?? ''
+  if (!trimmed) {
+    if (import.meta.env.DEV) {
+      console.warn('VITE_API_BASE_URL is not set; API requests will fail.')
+    }
+    return ''
+  }
+
+  try {
+    const parsed = new URL(trimmed)
+    return parsed.toString().replace(/\/$/, '')
+  } catch {
+    if (import.meta.env.DEV) {
+      console.warn(`VITE_API_BASE_URL is not a valid URL: "${trimmed}"`)
+    }
+    return trimmed.replace(/\/$/, '')
+  }
+}
+
 export const env = {
   isDevelopment: import.meta.env.DEV,
   isProduction: import.meta.env.PROD,
 
-  apiBaseUrl: import.meta.env.VITE_API_BASE_URL ?? '',
+  apiBaseUrl: readApiBaseUrl(import.meta.env.VITE_API_BASE_URL),
   apiTimeout: readNumber(import.meta.env.VITE_API_TIMEOUT, 15_000),
 
   /**

@@ -1,9 +1,10 @@
 import { Heart } from 'lucide-react'
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 
 import { ScreenHeader } from '@/components/navigation/ScreenHeader'
 import { AppScreen } from '@/components/ui/AppScreen'
+import { ErrorState } from '@/components/states/ErrorState'
 import { routes } from '@/config/routes'
 import { ProfileCard } from '@/features/profiles/components/ProfileCard'
 import { useAuth } from '@/features/auth/hooks/useAuth'
@@ -14,33 +15,42 @@ import { Spinner } from '@/components/loading/Spinner'
 /** Profiles the member has been matched with. */
 export function MatchesPage() {
   const { user } = useAuth()
+  const profileId = user?.profileId
   const [matches, setMatches] = useState<ProfilePreview[]>([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [reloadNonce, setReloadNonce] = useState(0)
 
   useEffect(() => {
-
-    if (!user?.profileId) {
+    if (!profileId) {
       return
     }
 
-    const fetchMatches = async () => {
-      setLoading(true)
-      setError(null)
-      try {
-        const data = await matchesService.fetchMutualMatches(user.profileId as string)
+    let cancelled = false
+    setLoading(true)
+    setError(null)
+
+    matchesService
+      .fetchMutualMatches(profileId)
+      .then((data) => {
+        if (cancelled) return
         setMatches(data)
-      } catch (err) {
+      })
+      .catch((err: unknown) => {
+        if (cancelled) return
         setError(err instanceof Error ? err.message : 'Failed to load matches')
-      } finally {
+      })
+      .finally(() => {
+        if (cancelled) return
         setLoading(false)
-      }
+      })
+
+    return () => {
+      cancelled = true
     }
+  }, [profileId, reloadNonce])
 
-    void fetchMatches()
-  }, [user?.profileId])
-
-  const displayMatches = matches
+  const retry = useCallback(() => setReloadNonce((value) => value + 1), [])
 
   return (
     <AppScreen>
@@ -52,19 +62,21 @@ export function MatchesPage() {
             <p className="mt-3 text-sm text-muted">Loading matches...</p>
           </div>
         ) : error ? (
-          <div className="rounded-2xl border border-line bg-white px-5 py-10 text-center text-sm text-muted">
-            <p>{error}</p>
+          <div className="pt-6">
+            <ErrorState
+              title="Could not load matches"
+              description={error}
+              onRetry={retry}
+            />
           </div>
-        ) : displayMatches.length ? (
+        ) : matches.length ? (
           <>
             <div className="flex items-center justify-between">
               <h2 className="text-sm font-semibold text-ink">Suggested matches</h2>
-              <span className="text-xs text-muted">
-                {displayMatches.length} profiles
-              </span>
+              <span className="text-xs text-muted">{matches.length} profiles</span>
             </div>
-            <ul className="grid grid-cols-2 gap-3">
-              {displayMatches.map((profile) => (
+            <ul className="grid grid-cols-1 gap-4">
+              {matches.map((profile) => (
                 <li key={profile.id}>
                   <ProfileCard profile={profile} className="w-full" />
                 </li>
@@ -83,7 +95,6 @@ export function MatchesPage() {
             </Link>
           </div>
         )}
-
       </main>
     </AppScreen>
   )
