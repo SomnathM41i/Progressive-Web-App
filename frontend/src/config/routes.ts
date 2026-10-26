@@ -7,6 +7,7 @@ export const routes = {
   welcome: '/welcome',
   login: '/login',
   register: '/register',
+  registerStep: '/register/:step',
 
   home: '/home',
   search: '/search',

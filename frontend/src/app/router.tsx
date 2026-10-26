@@ -9,7 +9,8 @@ import { routes } from '@/config/routes'
 
 import { WelcomePage } from '@/features/auth/pages/WelcomePage'
 import { LoginPage } from '@/features/auth/pages/LoginPage'
-import { RegisterPage } from '@/features/auth/pages/RegisterPage'
+import { RegistrationWizardPage } from '@/features/registration/pages/RegistrationWizardPage'
+import { registrationStepPath } from '@/features/registration/steps'
 
 import { DashboardPage } from '@/features/dashboard/pages/DashboardPage'
 import { SearchPage } from '@/features/search/pages/SearchPage'
@@ -53,8 +54,13 @@ export function AppRouter() {
           <Route element={<RedirectIfAuthenticated />}>
             <Route path={routes.welcome} element={<WelcomePage />} />
             <Route path={routes.login} element={<LoginPage />} />
-            <Route path={routes.register} element={<RegisterPage />} />
           </Route>
+
+          <Route
+            path={routes.register}
+            element={<Navigate to={registrationStepPath('account')} replace />}
+          />
+          <Route path={routes.registerStep} element={<RegistrationWizardPage />} />
         </Route>
 
         <Route element={<RequireAuth />}>

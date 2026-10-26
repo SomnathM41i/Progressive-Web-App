@@ -6,7 +6,12 @@ import {
   type AuthContextValue,
 } from '@/features/auth/context/auth-context'
 import { authService, isPreviewAuth } from '@/features/auth/services/auth.service'
-import type { AuthStatus, AuthUser, LoginCredentials } from '@/features/auth/types'
+import type {
+  AuthSession,
+  AuthStatus,
+  AuthUser,
+  LoginCredentials,
+} from '@/features/auth/types'
 import { setAuthTokenProvider, setUnauthorizedHandler } from '@/services/api'
 
 /**
@@ -45,6 +50,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     [applySession],
   )
 
+  const adoptSession = useCallback(
+    (session: AuthSession) => {
+      applySession(session.user, session.token)
+    },
+    [applySession],
+  )
+
   const logout = useCallback(async () => {
     await authService.logout()
     applySession(null)
@@ -65,8 +77,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [])
 
   const value = useMemo<AuthContextValue>(
-    () => ({ status, user, isPreview: isPreviewAuth, login, logout, restore }),
-    [status, user, login, logout, restore],
+    () => ({
+      status,
+      user,
+      isPreview: isPreviewAuth,
+      login,
+      adoptSession,
+      logout,
+      restore,
+    }),
+    [status, user, login, adoptSession, logout, restore],
   )
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>

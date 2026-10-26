@@ -60,6 +60,26 @@ function persist(session: AuthSession | null): void {
   }
 }
 
+function buildSessionFromProfile(input: {
+  matriId: string
+  name?: string | null
+  email?: string | null
+  phone?: string | null
+}): AuthSession {
+  const matriId = input.matriId.trim()
+  const name = input.name?.trim() || 'Member'
+
+  return {
+    user: {
+      id: matriId,
+      name,
+      profileId: matriId,
+      email: input.email?.trim() || null,
+      phone: input.phone?.trim() || null,
+    },
+  }
+}
+
 const authServiceImpl: AuthService = {
   async restoreSession(): Promise<AuthSession | null> {
     const raw = sessionStore.read(SESSION_KEY)
@@ -94,7 +114,8 @@ const authServiceImpl: AuthService = {
       })
     }
 
-    const matriId = typeof data.data.MatriID === 'string' ? data.data.MatriID.trim() : ''
+    const matriId =
+      typeof data.data.MatriID === 'string' ? data.data.MatriID.trim() : ''
     const name = typeof data.data.Name === 'string' ? data.data.Name.trim() : ''
 
     if (!matriId) {
@@ -103,15 +124,12 @@ const authServiceImpl: AuthService = {
       })
     }
 
-    const session: AuthSession = {
-      user: {
-        id: matriId,
-        name: name || 'Member',
-        profileId: matriId,
-        email: data.data.Email ?? null,
-        phone: data.data.Mobile ?? null,
-      },
-    }
+    const session = buildSessionFromProfile({
+      matriId,
+      name,
+      email: data.data.Email ?? null,
+      phone: data.data.Mobile ?? null,
+    })
 
     persist(session)
     return session
@@ -123,6 +141,9 @@ const authServiceImpl: AuthService = {
 }
 
 export const authService: AuthService = authServiceImpl
+export { buildSessionFromProfile, persist as persistAuthSession }
+
+export { SESSION_KEY }
 
 /** True when the running build is using development placeholder data. */
 export const isPreviewAuth = env.devPreview

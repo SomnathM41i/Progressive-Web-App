@@ -1,6 +1,11 @@
 import { createContext } from 'react'
 
-import type { AuthStatus, AuthUser, LoginCredentials } from '@/features/auth/types'
+import type {
+  AuthSession,
+  AuthStatus,
+  AuthUser,
+  LoginCredentials,
+} from '@/features/auth/types'
 
 export interface AuthContextValue {
   status: AuthStatus
@@ -8,6 +13,7 @@ export interface AuthContextValue {
   /** True when the session comes from the development preview, not the API. */
   isPreview: boolean
   login: (credentials: LoginCredentials) => Promise<void>
+  adoptSession: (session: AuthSession) => void
   logout: () => Promise<void>
   restore: () => Promise<void>
 }

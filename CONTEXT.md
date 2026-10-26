@@ -3,7 +3,7 @@
 Single-source orientation file for anyone (human or agent) working on this
 repository. Read this first, then go deeper via the docs listed at the bottom.
 
-Last reviewed: 2026-10-20
+Last reviewed: 2026-10-23
 
 ## What this is
 
@@ -128,13 +128,236 @@ Enforced by existing code and `docs/architecture.md`:
 | Dashboard data | ⚠️ Stub — throws `ApiNotIntegratedError` unless `VITE_ENABLE_DEV_PREVIEW=true` (placeholder data) |
 | Profile detail | ⚠️ Partial — renders preview data; **Send interest** and **shortlist toggle** are real. No profile-fetch endpoint yet |
 | My Profile section (overview + 11 detail screens) | ✅ Real — read-only, 11 `get-*` endpoints (`docs/profile-plan.md`) |
-| Profile edit / registration / update flows | ⛔ `ComingSoon` — write endpoints deliberately out of scope |
+| Registration / profile update flows | ⚠️ Wizard steps and review are implemented; live API contract validation and a few payload/UI gaps remain |
 | Search, chat, notifications, success stories | ⛔ Placeholder / mock UI (search and chat have local mock state) |
 | Backend business endpoints | ⛔ None (only `/api/health`) |
 
 > Note: `docs/architecture.md` and `docs/api-integration.md` still describe auth
 > and dashboard as stubs. **Auth, matches, interests and shortlist are now
 > integrated for real** — trust the code over those two docs on this point.
+
+## Registration flow (in progress)
+
+This is the current workstream. Codex should read this section before changing
+anything under `frontend/src/features/registration/`.
+
+### Scope and source of truth
+
+- Live API base: `https://shivrajmaratha.com/apis`.
+- Postman source:
+  `/mnt/c/Users/Somnath Mali/Downloads/SVR Matrimony API Collection.postman_collection (1).json`
+  — folders `Registration Master` and `Master Data`.
+- Write endpoints: `register.php`, `update-basic-details.php`,
+  `update-contact-details.php`, `update-education_occupation-details.php`,
+  `update-family-details.php`, `update-horoscope-details.php`,
+  `update-partner-preference-details.php`, `update-nri-details.php`.
+- Read endpoints: `get-basic-details.php`, `get-contact-details.php`,
+  `get-education_occupation-details.php`, `get-family-details.php`,
+  `get-horoscope-details.php`, `get-partner-preference-details.php`.
+- There is **no NRI read endpoint** in the collection; the NRI form is
+  write-only for now.
+- Master Data endpoints are `GET`. Query-parameter endpoints need the `.php`
+  suffix (`get-caste-list.php?religion=Hindu`); without it the server returns
+  website HTML instead of JSON.
+
+### Implemented so far
+
+| Phase | What exists                                                                                                           | State                           |
+| ----- | --------------------------------------------------------------------------------------------------------------------- | ------------------------------- |
+| 1     | `constants.ts`, `types.ts`, `endpoints.ts`                                                                            | Done                            |
+| 2     | `form-data.ts`, `mapper.ts`, `registration.service.ts` (8 writes, 6 reads)                                            | Done                            |
+| 3     | `steps.ts`, registration context/provider/hook, `/register/:step` routing, guards, progress bar, conditional NRI step | Done                            |
+| 4     | `AccountStepPage.tsx` integrated into the wizard                                                                      | Implemented; prior checks passed |
+| 5     | `NriStepPage.tsx`                                                                                                     | Implemented; prior checks passed |
+| 6     | Basic details form, section submit, and master data                                                                   | Implemented; typecheck/lint/build pass |
+| 7     | Contact, education, family, horoscope, partner, readback and review forms                                             | Implemented; typecheck/lint/build pass |
+
+Current step order: **account → nri (only for `profile_location_type=NRI`) →
+basic → contact → education → family → horoscope → partner → review**. Account
+back navigation returns to `/welcome`.
+
+The wizard shell is `pages/RegistrationWizardPage.tsx`; the remaining sections
+share `pages/SectionStepPage.tsx` and the final review uses the existing GET
+methods. Master-data key mappings outside the live-verified table remain subject
+to live verification.
+
+### Account step contract corrections
+
+The first live attempt failed with:
+
+```json
+{
+  "status": "error",
+  "message": "Invalid child acceptance value, Middle name must contain only letters"
+}
+```
+
+Corrections now in the page:
+
+- `dob` is the **day of month as a string** (`"01"`), not a full date. Month is
+  sent separately as `dobMonth` (1–12), year as `dobYear`.
+- `countrycode` is the **country ID** from `get-country-list.php`, not a dial
+  code. India is id `99`; `+91` is only the display label.
+- `Profilecreatedby` is the relation label from
+  `get-profile-created_by-relations.php`; `Relation_id` is its id, except
+  `Self`, which sends `0`.
+- `maritalstatus` comes from `get-maritial_status-list.php` (API spelling:
+  Unmarried, Divorced, Widower, Widowed, Awaiting Divorce, Seperated).
+- `child_acceptance` is always sent from
+  `Do Not Accept Children | Boy Child | Girl Child | Both Boy and Girl Child`,
+  defaulting to `Do Not Accept Children`. It is **not present in the Postman
+  register sample**, but the live backend rejected the old payload with a child
+  acceptance error, so a valid value is now sent. This still needs a live
+  register test to confirm.
+- `middle_name` is validated as letters only and omitted when blank.
+- Children fields (`noofchildren`, `childrenstatus`) are shown and required only
+  when a marital status is selected and is not `Unmarried`.
+- Religion → caste → subcaste are dependent selects; changing a parent clears
+  the children and reloads options.
+- DOB year options come from `get-year-list.php`; month options are local;
+  validation rejects invalid/future dates and anyone under 18.
+- Account creation calls `register.php`, adopts the returned `MatriID` through
+  `AuthProvider.adoptSession`, persists the session, sets
+  `profile_location_type`, saves the draft, and moves to the next visible step.
+
+### NRI step contract
+
+- Write endpoint: `update-nri-details.php`. No prefill/read.
+- `nri_type`: NRI, OCI, PIO, Foreign Citizen.
+- `nri_residency_status`: Resident, Non-Resident (contract values, not the
+  `get-residency-list.php` values Citizen/Permanent Resident).
+- `nri_visa_type`: Work, Student, Dependent, Business, Other, Not Applicable.
+- `nri_willing_to_relocate`: Yes, No, Depends.
+- `nri_settlement_preference`: India, Abroad, Undecided.
+- `nri_visa_expiry` is required unless visa type is `Not Applicable`.
+- Current/preferred country use names from `get-country-list.php`
+  (`nicename` with the phone-code suffix stripped).
+- The step is only reachable when `profile_location_type` is `NRI`.
+
+### Master data service
+
+`services/master-data.service.ts` caches options and exposes
+`MasterOption { value, label, id? }` loaders. Response shapes seen live (unless noted):
+
+| Loader              | Endpoint                               | Response                                               |
+| ------------------- | -------------------------------------- | ------------------------------------------------------ |
+| `countries()`       | `get-country-list.php`                 | `{ id, phonecode, nicename }`                          |
+| `relations()`       | `get-profile-created_by-relations.php` | `{ id, relation }`                                     |
+| `maritalStatuses()` | `get-maritial_status-list.php`         | `{ id, status, category_id }`                          |
+| `religions()`       | `get-religion-list.php`                | `{ id, religion }`                                     |
+| `castes(religion)`  | `get-caste-list.php?religion=`         | `{ id, caste, religion }`                              |
+| `subcastes(caste)`  | `get-subcaste-list.php?caste=`         | `{ id, subcast, caste, religion }`                     |
+| `days()`            | `get-day-list.php`                     | `{ id, day }` — one probe timed out; still unconfirmed |
+| `years()`           | `get-year-list.php`                    | `{ id, year }` (from 1950)                             |
+| `residencies()`     | `get-residency-list.php`               | `{ id, residency_status }`                             |
+| `states(country)`   | `get-state-list.php?country=`          | `{ id, state }`                                        |
+| `districts(state)`  | `get-district-list.php?state=`         | `{ id, dist }`                                         |
+| `cities(district)`  | `get-city-list.php?district=`          | `{ id, city }`                                         |
+| `talukas(district)` | `get-taluka-list.php?district=`        | `{ id, ... }`                                          |
+| `brothers()`        | `get-no_of_brother-list.php`           | `{ id, number }`                                       |
+| `familyWealth()`    | `get-family_wealth-list.php`           | `{ id, wealth }`                                       |
+
+Methods also exist for the remaining Master Data GETs (education,
+occupation, income, employed-in, blood group, complexion, special case, family
+values/type/status, mother tongue, nakshatra, gothra, moon sign, manglik, shani,
+horoscope match, calling time, siblings, birth AM/PM, IIT universities). **Only
+the rows above have been live-verified.** Check the real key names before using
+the rest — do not assume the guessed field names are correct.
+
+### Files added or changed
+
+Added:
+
+```text
+frontend/src/features/registration/
+├── constants.ts
+├── types.ts
+├── endpoints.ts
+├── form-data.ts
+├── mapper.ts
+├── steps.ts
+├── context/registration-context.ts
+├── context/RegistrationProvider.tsx
+├── hooks/useRegistration.ts
+├── services/registration.service.ts
+├── services/master-data.service.ts
+├── pages/RegistrationWizardPage.tsx
+├── pages/AccountStepPage.tsx
+├── pages/NriStepPage.tsx
+├── pages/BasicStepPage.tsx
+└── pages/SectionStepPage.tsx
+frontend/src/components/ui/SelectField.tsx
+```
+
+Modified: `frontend/src/app/router.tsx`, `frontend/src/config/routes.ts`,
+`frontend/src/features/auth/context/AuthProvider.tsx`,
+`frontend/src/features/auth/context/auth-context.ts`,
+`frontend/src/features/auth/services/auth.service.ts`.
+
+`frontend/src/features/auth/pages/RegisterPage.tsx` is the unused old shell; do
+not wire it into the flow without deciding to remove or repurpose it.
+
+### Session and draft behaviour
+
+- Registration draft lives in `sessionStorage` under `shivaraj.registration`;
+  the password is stripped before persistence.
+- `RegistrationProvider` exposes `saveAccount`, `saveSection`, completion
+  tracking and the active draft.
+- The API has no token or usable cross-origin cookie; identity is the `MatriID`
+  sent per request. Registration currently adopts the `MatriID` returned by
+  `register.php` on the client.
+- Section writes call their `update-*` endpoint. Basic/contact/education/family/
+  horoscope/partner read methods are used to prefill empty drafts and populate
+  the review summary. NRI has no read method.
+
+### Pending
+
+1. Fix `BasicStepPage.tsx`: it reads `options.relations` for Profile created
+   by but never loads `masterDataService.relations()`, so that select has no
+   options. Recheck the account-to-basic prefill (name, DOB, children) after
+   the fix.
+2. Verify all master-data row keys against live responses. The collection
+   documents request fields but does not include response samples for many of
+   these lists, especially education, occupation, income, blood group, family,
+   horoscope and partner options.
+3. Replace the remaining comma-separated text inputs in family and partner
+   preference with real multi-selects where the UI allows it; the API examples
+   encode those values as comma-separated strings.
+4. Review the generic section payloads against the Postman samples. Education
+   now repeats saved basic fields, horoscope includes the optional file upload,
+   and contact has country/state/district/city cascades; confirm each field and
+   required rule before live submission.
+5. Decide whether a final registration-completion API exists. The review page
+   reads sections and shows a summary but deliberately does not submit or
+   finalize anything.
+6. Decide whether OTP (`send-otp.php` / `verify-otp.php`) belongs in the
+   registration flow; it is not integrated.
+7. Live-test register + each `update-*` endpoint, including horoscope file
+   upload and family `property_types` / `investment_types` arrays. No
+   registration endpoint has been submitted to the live server yet.
+8. Confirm the exact success/error envelopes and `MatriID` shape; confirm
+   whether `update-*` endpoints replace or merge fields.
+9. Finish cleanup/QA: unused `RegisterPage`, browser back/refresh behaviour,
+   mobile layout, and the two pre-existing lint warnings in `MatchesPage.tsx`
+   and `ProfilePhotoProvider.tsx`.
+
+Latest local verification in WSL: `npm run typecheck`, `npm run lint`, and
+`npm run build` pass. Lint reports only the two existing warnings above;
+production build reports the existing large-chunk warning. Run installs from
+WSL too — a Windows `node_modules` has the wrong native bindings for WSL.
+
+### Rules for the next agent
+
+- Do not invent endpoints, response shapes or Master Data values. Use the
+  collection and live GETs; fail loudly with `ApiNotIntegratedError` when a
+  contract is unknown.
+- Pages must not call axios; add methods to a feature service.
+- Keep all route paths in `src/config/routes.ts`.
+- Use English for UI chrome/toasts and Marathi only for content, per
+  `AGENTS.md`.
+- Run `npm run typecheck`, `npm run lint`, and `npm run build` in `frontend/`
+  from WSL after each phase. Current audit: all three pass; lint has only the
+  two warnings noted above and the build has the existing large-chunk warning.
 
 ## Configuration
 
@@ -210,8 +433,8 @@ Behaviour now:
 
 ## Known gaps / likely next steps
 
-1. Write flows for the profile section (registration + `update-*` endpoints) and
-   their Master Data dropdowns — read-only screens are done.
+1. Finish the registration write flow: account and NRI are done; basic, contact,
+   education, family, horoscope, partner and review are still pending.
 2. Give the dashboard a real endpoint so production isn't on the error path.
 3. Add a profile-fetch endpoint so `ProfileDetailPage` stops relying on preview
    data (its interest/shortlist actions are already real).
