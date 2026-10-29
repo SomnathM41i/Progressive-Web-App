@@ -1,58 +1,184 @@
-import { useState } from 'react'
-import { Check, Crown, ShieldCheck } from 'lucide-react'
+import { useCallback, useEffect, useState } from 'react'
+import { Check, Crown } from 'lucide-react'
 
 import { ScreenHeader } from '@/components/navigation/ScreenHeader'
+import { EmptyState } from '@/components/states/EmptyState'
+import { ErrorState } from '@/components/states/ErrorState'
 import { AppScreen } from '@/components/ui/AppScreen'
-import { useToast } from '@/hooks/useToast'
+import { Button } from '@/components/ui/Button'
+import { Card } from '@/components/ui/Card'
+import { env } from '@/config/env'
+import { CheckoutSheet } from '@/features/membership/components/CheckoutSheet'
+import { formatAmount, planMeta, planTitle } from '@/features/membership/format'
+import {
+  membershipService,
+  type MembershipPlanOffer,
+} from '@/features/membership/services/membership.service'
 
-const benefits = [
-  'View mobile numbers',
-  'Send unlimited interest requests',
-  'Chat with your matches',
-  'Get your profile highlighted',
-  'See who viewed your profile',
-  'Get priority customer support',
-]
+function PlanCard({
+  plan,
+  onSelect,
+}: {
+  plan: MembershipPlanOffer
+  onSelect: (plan: MembershipPlanOffer) => void
+}) {
+  const title = planTitle(plan.name)
+  const meta = planMeta(plan)
 
-const plans = [
-  { name: '1 month', price: '₹999' },
-  { name: '3 months', price: '₹2,499', bestValue: true },
-  { name: '6 months', price: '₹4,499' },
-  { name: '12 months', price: '₹7,999', fullWidth: true },
-]
+  return (
+    <Card flush className="flex h-full flex-col overflow-hidden">
+      <div className="flex items-start justify-between gap-3 border-b border-line bg-cream/70 px-4 py-3.5">
+        <div className="min-w-0">
+          <p className="truncate text-base font-semibold text-maroon">{title}</p>
+          {meta ? <p className="mt-0.5 text-xs text-muted">{meta}</p> : null}
+        </div>
+        <p className="shrink-0 text-xl font-bold tracking-tight text-ink">
+          {formatAmount(plan.amount)}
+        </p>
+      </div>
 
-const paymentMethods = ['UPI', 'VISA', 'Mastercard', 'RuPay', 'Net Banking']
+      {plan.features.length ? (
+        <ul className="flex-1 space-y-2 px-4 py-3.5">
+          {plan.features.map((feature) => (
+            <li
+              key={feature}
+              className="flex items-start gap-2 text-sm leading-snug text-ink"
+            >
+              <Check
+                className="mt-0.5 size-4 shrink-0 text-maroon"
+                strokeWidth={2.6}
+                aria-hidden="true"
+              />
+              <span>{feature}</span>
+            </li>
+          ))}
+        </ul>
+      ) : (
+        <p className="flex-1 px-4 py-3.5 text-xs text-muted">
+          Plan details are available from the centre.
+        </p>
+      )}
+
+      <div className="border-t border-line px-4 py-3">
+        <Button fullWidth size="sm" onClick={() => onSelect(plan)}>
+          Choose plan
+        </Button>
+      </div>
+    </Card>
+  )
+}
+
+function PlanSkeleton() {
+  return (
+    <div className="animate-pulse rounded-card border border-line bg-surface p-4">
+      <div className="flex items-start justify-between gap-3">
+        <div className="space-y-2">
+          <div className="h-4 w-24 rounded bg-rose" />
+          <div className="h-3 w-32 rounded bg-rose/70" />
+        </div>
+        <div className="h-6 w-20 rounded bg-rose" />
+      </div>
+      <div className="mt-4 space-y-2">
+        {Array.from({ length: 4 }, (_, index) => (
+          <div key={index} className="h-3 rounded bg-rose/50" />
+        ))}
+      </div>
+    </div>
+  )
+}
 
 export function MembershipPage() {
-  const toast = useToast()
-  const [selectedPlan, setSelectedPlan] = useState('3 months')
+  const [plans, setPlans] = useState<MembershipPlanOffer[]>([])
+  const [status, setStatus] = useState<'loading' | 'ready' | 'error'>('loading')
+  const [error, setError] = useState<string | null>(null)
+  const [reloadNonce, setReloadNonce] = useState(0)
+  const [checkoutPlan, setCheckoutPlan] = useState<MembershipPlanOffer | null>(null)
+  const demoPayment = env.paymentDemo || env.isDevelopment
+
+  useEffect(() => {
+    let cancelled = false
+
+    membershipService
+      .fetchPlans()
+      .then((data) => {
+        if (cancelled) return
+        setPlans(data)
+        setStatus('ready')
+      })
+      .catch((err: unknown) => {
+        if (cancelled) return
+        setError(
+          err instanceof Error ? err.message : 'Could not load membership plans.',
+        )
+        setStatus('error')
+      })
+
+    return () => {
+      cancelled = true
+    }
+  }, [reloadNonce])
+
+  const retry = useCallback(() => {
+    setStatus('loading')
+    setError(null)
+    setReloadNonce((value) => value + 1)
+  }, [])
+
+  const closeCheckout = useCallback(() => setCheckoutPlan(null), [])
 
   return (
     <AppScreen>
-      <ScreenHeader title="Premium membership" />
+      <ScreenHeader title="Membership plans" />
 
-      <main className="min-h-0 flex-1 space-y-3 overflow-y-auto overscroll-y-contain px-3 pt-3 pb-2">
-        <section className="rounded-xl border border-[#eee5d8] bg-white p-3 shadow-soft">
-          <h2 className="mb-2 flex items-center justify-center gap-2 text-[13px] font-semibold text-maroon"><Crown className="size-4 fill-[#d89c21] text-[#b97713]" />Premium benefits</h2>
-          <ul className="space-y-1.5">{benefits.map((benefit) => <li key={benefit} className="flex items-center gap-1.5 text-[10px] leading-tight text-ink"><Check className="size-3.5 shrink-0 text-[#9a641c]" strokeWidth={2.4} />{benefit}</li>)}</ul>
+      <main className="min-h-0 flex-1 overflow-y-auto overscroll-y-contain px-4 py-4">
+        <section className="relative overflow-hidden rounded-card bg-gradient-to-br from-maroon to-maroon-deep px-5 py-5 text-white shadow-brand">
+          <span className="pointer-events-none absolute -top-8 -right-8 size-28 rounded-full bg-white/10" />
+          <span className="pointer-events-none absolute -bottom-12 -left-6 size-32 rounded-full bg-white/5" />
+          <span className="relative flex size-10 items-center justify-center rounded-full bg-white/15">
+            <Crown className="size-5 text-[#f4cf7a]" aria-hidden="true" />
+          </span>
+          <h2 className="relative mt-3 text-lg font-semibold">Choose your plan</h2>
+          <p className="relative mt-1 max-w-xs text-sm leading-relaxed text-white/80">
+            Unlock verified contacts, chat and complete profile access.
+          </p>
         </section>
 
-        <section aria-label="Membership plans" className="grid grid-cols-3 gap-2">
-          {plans.map((plan) => <button key={plan.name} type="button" aria-pressed={selectedPlan === plan.name} onClick={() => setSelectedPlan(plan.name)} className={`relative flex min-h-[4.5rem] flex-col items-center justify-center rounded-lg border px-1.5 py-2 text-center transition ${plan.fullWidth ? 'col-span-3 min-h-[3.8rem]' : ''} ${selectedPlan === plan.name ? 'border-[#d6a145] bg-[#fff6e5] shadow-soft' : 'border-[#e9e2de] bg-white'}`}>
-            <span className="text-[10px] font-medium text-ink">{plan.name}</span>
-            <span className={`mt-0.5 text-[15px] font-bold ${selectedPlan === plan.name ? 'text-maroon' : 'text-ink'}`}>{plan.price}</span>
-            {plan.bestValue ? <span className="mt-0.5 text-[8px] text-[#9a641c]">Best value</span> : null}
-          </button>)}
-        </section>
+        {status === 'loading' ? (
+          <div className="mt-4 space-y-3">
+            <PlanSkeleton />
+            <PlanSkeleton />
+            <PlanSkeleton />
+          </div>
+        ) : status === 'error' ? (
+          <div className="mt-4">
+            <ErrorState
+              title="Could not load membership plans"
+              description={error ?? 'Please try again in a moment.'}
+              onRetry={retry}
+            />
+          </div>
+        ) : plans.length === 0 ? (
+          <div className="mt-4">
+            <EmptyState
+              icon={<Crown className="size-6" aria-hidden="true" />}
+              title="No plans available"
+              description="Membership plans are not published right now. Please contact the centre."
+            />
+          </div>
+        ) : (
+          <div className="mt-4 grid gap-3 sm:grid-cols-2">
+            {plans.map((plan) => (
+              <PlanCard key={plan.id} plan={plan} onSelect={setCheckoutPlan} />
+            ))}
+          </div>
+        )}
+
+        <div className="h-4" />
       </main>
 
-      <footer className="shrink-0 space-y-2 border-t border-line bg-white px-3 pt-2.5 pb-2">
-        <button type="button" onClick={() => toast.info('Membership checkout will be available soon')} className="h-10 w-full rounded-lg bg-maroon text-xs font-semibold text-white shadow-brand transition hover:bg-maroon-dark">Continue with {selectedPlan} plan</button>
-        <div className="text-center">
-          <p className="mb-1 flex items-center justify-center gap-1 text-[10px] font-medium text-maroon"><ShieldCheck className="size-3.5 text-emerald-700" />Secure payment methods</p>
-          <ul className="flex items-center justify-center gap-1.5">{paymentMethods.map((method) => <li key={method} className="flex h-6 min-w-10 items-center justify-center rounded border border-[#eee9e5] bg-white px-1 text-[8px] font-bold text-[#333]">{method}</li>)}</ul>
-        </div>
-      </footer>
+      {checkoutPlan ? (
+        <CheckoutSheet plan={checkoutPlan} demo={demoPayment} onClose={closeCheckout} />
+      ) : null}
     </AppScreen>
   )
 }

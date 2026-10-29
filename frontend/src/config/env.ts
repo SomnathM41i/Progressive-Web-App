@@ -61,4 +61,13 @@ export const env = {
    * `.env.production.local`, which is gitignored.
    */
   devPreview: readBoolean(import.meta.env.VITE_ENABLE_DEV_PREVIEW),
+
+  /**
+   * Simulated membership checkout.
+   *
+   * The Razorpay order/verification endpoints are not connected yet, so this
+   * flag lets the checkout UI be reviewed without moving money. It defaults to
+   * off and must stay off in production; development builds enable it anyway.
+   */
+  paymentDemo: readBoolean(import.meta.env.VITE_ENABLE_PAYMENT_DEMO),
 } as const

@@ -88,7 +88,7 @@ export function AppHeader() {
             {[
               ...desktopNavItems,
               { label: 'Interests', to: routes.interests, end: false },
-              { label: 'Premium membership', to: routes.membership, end: false },
+              { label: 'Membership plans', to: routes.membership, end: false },
               { label: 'Privacy Policy', to: legalRoutes.privacyPolicy, end: false },
               { label: 'Terms and Conditions', to: legalRoutes.termsConditions, end: false },
               { label: 'Disclaimer', to: legalRoutes.disclaimer, end: false },
