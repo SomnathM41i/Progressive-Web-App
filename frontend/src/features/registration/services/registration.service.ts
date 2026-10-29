@@ -13,7 +13,7 @@ import type {
   EducationDetails,
   FamilyDetails,
   HoroscopeDetails,
-  NriDetails,
+  NriUpdatePayload,
   PartnerPreferenceDetails,
   RegistrationAccount,
   RegistrationAccountOutcome,
@@ -140,7 +140,7 @@ async function submitSection(
 
 export interface RegistrationService {
   registerAccount: (payload: RegistrationAccount) => Promise<RegistrationAccountOutcome>
-  submitNriDetails: (payload: NriDetails) => Promise<RegistrationMutationOutcome>
+  submitNriDetails: (payload: NriUpdatePayload) => Promise<RegistrationMutationOutcome>
   submitBasicDetails: (payload: BasicDetails) => Promise<RegistrationMutationOutcome>
   submitContactDetails: (
     payload: ContactDetails,

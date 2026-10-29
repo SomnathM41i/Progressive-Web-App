@@ -19,10 +19,10 @@ export const CHILD_ACCEPTANCE_OPTIONS = [
 ] as const
 export type ChildAcceptance = (typeof CHILD_ACCEPTANCE_OPTIONS)[number]
 
-export const NADI_OPTIONS = ['Adhya', 'Madhya', 'Antya'] as const
+export const NADI_OPTIONS = ['Adi', 'Madhya', 'Antya'] as const
 export type Nadi = (typeof NADI_OPTIONS)[number]
 
-export const GAN_OPTIONS = ['Dev Gan', 'Manushya Gan', 'Rakshas Gan'] as const
+export const GAN_OPTIONS = ['Dev', 'Manushya', 'Rakshas'] as const
 export type Gan = (typeof GAN_OPTIONS)[number]
 
 export const BIRTH_AMPM_OPTIONS = ['AM', 'PM'] as const
@@ -46,6 +46,20 @@ export const HEIGHT_CODES: readonly string[] = Array.from({ length: 37 }, (_, in
 
 export const WEIGHT_MIN = 40
 export const WEIGHT_MAX = 150
+
+export function heightLabel(code: string): string {
+  const totalInches = 47 + Number(code)
+  return `${Math.floor(totalInches / 12)}Ft ${totalInches % 12} inch`
+}
+
+export function heightCodeFromLabel(value: string): string {
+  if (!value) return ''
+  if (HEIGHT_CODES.includes(value)) return value
+  const match = /(\d+)\s*Ft\s*(\d+)\s*inch/i.exec(value)
+  if (!match) return ''
+  const code = String(Number(match[1]) * 12 + Number(match[2]) - 47)
+  return HEIGHT_CODES.includes(code) ? code : ''
+}
 
 export const LIVING_STATUS_OPTIONS: readonly string[] = []
 

@@ -29,14 +29,19 @@ export function SectionState({
   reload,
   skeletonRows = 6,
   children,
-}: SectionStateProps) {
+  /** Show children even if the resource failed to load (e.g. upload forms). */
+  alwaysShowChildren = false,
+}: SectionStateProps & { alwaysShowChildren?: boolean }) {
   return (
     <AppScreen>
       <ScreenHeader title={title} />
       <main className="min-h-0 flex-1 space-y-4 overflow-y-auto overscroll-y-contain px-4 py-4">
         {status === 'loading' ? <SectionSkeleton rows={skeletonRows} /> : null}
         {status === 'error' ? (
-          <ErrorState description={error ?? undefined} onRetry={reload} />
+          <div className="space-y-4">
+            <ErrorState description={error ?? undefined} onRetry={reload} />
+            {alwaysShowChildren ? children : null}
+          </div>
         ) : null}
         {status === 'ready' ? children : null}
       </main>

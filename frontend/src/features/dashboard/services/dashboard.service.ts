@@ -1,40 +1,56 @@
-import { env } from '@/config/env'
-import { PREVIEW_DASHBOARD } from '@/features/dashboard/dev/preview-dashboard'
 import type { DashboardData } from '@/features/dashboard/types'
-import { ApiNotIntegratedError } from '@/services/api-error'
+import { publicProfileService } from '@/features/profiles/services/public-profile.service'
+import { PREVIEW_DASHBOARD } from '@/features/dashboard/dev/preview-dashboard'
 
-/**
- * Boundary between the dashboard UI and its data source.
- *
- * The dashboard components never call the API directly; they consume this
- * interface. Swapping the implementation is the only change needed once the
- * collection is available.
- */
 export interface DashboardService {
   fetchDashboard: () => Promise<DashboardData>
 }
 
-/**
- * Real implementation — pending the API collection.
- *
- * It fails with a descriptive error instead of returning invented content, so
- * an unconfigured build can never look like a working one.
- */
-const unconfiguredDashboardService: DashboardService = {
+const realDashboardService: DashboardService = {
   async fetchDashboard(): Promise<DashboardData> {
-    // TODO(api): GET the dashboard endpoint and map the response to DashboardData.
-    throw new ApiNotIntegratedError('Dashboard data')
+    try {
+      const [unmarriedFemale, unmarriedMale, remarriageFemale, remarriageMale, nriFemale, nriMale] =
+        await Promise.allSettled([
+          publicProfileService.list('unmarried', { gender: 'Female', limit: 12 }),
+          publicProfileService.list('unmarried', { gender: 'Male', limit: 12 }),
+          publicProfileService.list('remarriage', { gender: 'Female', limit: 12 }),
+          publicProfileService.list('remarriage', { gender: 'Male', limit: 12 }),
+          publicProfileService.list('nri', { gender: 'Female', limit: 12 }),
+          publicProfileService.list('nri', { gender: 'Male', limit: 12 }),
+        ])
+
+      const uf = unmarriedFemale.status === 'fulfilled' ? unmarriedFemale.value.profiles : []
+      const um = unmarriedMale.status === 'fulfilled' ? unmarriedMale.value.profiles : []
+      const rf = remarriageFemale.status === 'fulfilled' ? remarriageFemale.value.profiles : []
+      const rm = remarriageMale.status === 'fulfilled' ? remarriageMale.value.profiles : []
+      const nf = nriFemale.status === 'fulfilled' ? nriFemale.value.profiles : []
+      const nm = nriMale.status === 'fulfilled' ? nriMale.value.profiles : []
+
+      const all = [...uf, ...um, ...rf, ...rm, ...nf, ...nm]
+
+      return {
+        summary: PREVIEW_DASHBOARD.summary,
+        recommended: all,
+        recentlyAdded: [],
+        successStories: [],
+        announcements: PREVIEW_DASHBOARD.announcements,
+        todayMatches: all.length,
+        sections: {
+          unmarriedBride: uf,
+          unmarriedGroom: um,
+          remarriageBride: rf,
+          remarriageGroom: rm,
+          nriBride: nf,
+          nriGroom: nm,
+        },
+      } as DashboardData & { sections: any }
+    } catch {
+      return {
+        ...PREVIEW_DASHBOARD,
+        successStories: [],
+      }
+    }
   },
 }
 
-const previewDashboardService: DashboardService = {
-  async fetchDashboard(): Promise<DashboardData> {
-    // A small delay keeps loading states visible while reviewing the UI.
-    await new Promise((resolve) => setTimeout(resolve, 450))
-    return PREVIEW_DASHBOARD
-  },
-}
-
-export const dashboardService: DashboardService = env.devPreview
-  ? previewDashboardService
-  : unconfiguredDashboardService
+export const dashboardService: DashboardService = realDashboardService

@@ -59,6 +59,9 @@ export interface NriDetails {
   nri_preferred_country: string
 }
 
+export type NriUpdatePayload = Pick<NriDetails, 'MatriID'> &
+  Partial<Omit<NriDetails, 'MatriID'>>
+
 export interface BasicDetails {
   MatriID: string
   Name: string
@@ -94,6 +97,7 @@ export interface ContactDetails {
   city: string
   work_phone: string
   dist: string
+  taluka: string
   residence: string
   mobile2: string
   mobile: string
@@ -103,6 +107,7 @@ export interface ContactDetails {
   work_address: string
   work_pincode: string
   working_city: string
+  working_taluka: string
   working_dist: string
   working_state: string
   working_country: string
@@ -194,6 +199,9 @@ export interface PartnerPreferenceDetails {
   rstatus1: string
   country1: string
   state1: string
+  district1?: string
+  taluka1?: string
+  city1?: string
   education1: string
   occupation1: string
   income_from: string

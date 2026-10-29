@@ -4,7 +4,7 @@ import { Link, NavLink } from 'react-router-dom'
 
 import logo from '@/assets/images/shivraj-logo.png'
 import { IconLink } from '@/components/ui/IconButton'
-import { routes } from '@/config/routes'
+import { routes, legalRoutes } from '@/config/routes'
 import { cn } from '@/lib/cn'
 
 const desktopNavItems = [
@@ -83,18 +83,21 @@ export function AppHeader() {
         {menuOpen ? (
           <nav
             aria-label="Mobile menu"
-            className="absolute top-full left-2 z-50 mt-2 flex w-52 flex-col rounded-2xl border border-line bg-white p-2 shadow-lift md:hidden"
+            className="absolute top-full left-2 z-50 mt-2 flex w-60 flex-col rounded-2xl border border-line bg-white p-2 shadow-lift md:hidden"
           >
             {[
               ...desktopNavItems,
               { label: 'Interests', to: routes.interests, end: false },
               { label: 'Premium membership', to: routes.membership, end: false },
+              { label: 'Privacy Policy', to: legalRoutes.privacyPolicy, end: false },
+              { label: 'Terms and Conditions', to: legalRoutes.termsConditions, end: false },
+              { label: 'Disclaimer', to: legalRoutes.disclaimer, end: false },
             ].map(({ label, to }) => (
               <Link
                 key={to}
                 to={to}
                 onClick={() => setMenuOpen(false)}
-                className="rounded-xl px-3 py-3 text-sm font-medium text-ink hover:bg-rose"
+                className="rounded-xl px-3 py-2.5 text-sm font-medium text-ink hover:bg-rose"
               >
                 {label}
               </Link>

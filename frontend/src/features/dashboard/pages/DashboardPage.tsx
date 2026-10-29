@@ -1,15 +1,11 @@
-import { Sparkles, UserPlus } from 'lucide-react'
-
-import { EmptyState } from '@/components/states/EmptyState'
 import { ErrorState } from '@/components/states/ErrorState'
 import { SectionHeading } from '@/components/ui/SectionHeading'
 import { AnnouncementsCard } from '@/features/dashboard/components/AnnouncementsCard'
 import { DashboardSkeleton } from '@/features/dashboard/components/DashboardSkeleton'
 import { HeroBanner } from '@/features/dashboard/components/HeroBanner'
 import { QuickAccessGrid } from '@/features/dashboard/components/QuickAccessGrid'
-import { SuccessStories } from '@/features/dashboard/components/SuccessStories'
 import { useDashboard } from '@/features/dashboard/hooks/useDashboard'
-import { ProfileCarousel } from '@/features/profiles/components/ProfileCarousel'
+import { InfiniteProfileCarousel } from '@/features/profiles/components/InfiniteProfileCarousel'
 import { useAuth } from '@/features/auth/hooks/useAuth'
 
 export function DashboardPage() {
@@ -32,7 +28,7 @@ export function DashboardPage() {
     )
   }
 
-  const { recommended, recentlyAdded, successStories, announcements } = state.data
+  const { announcements } = state.data
   const firstName = (user?.name ?? 'Member').split(' ')[0]
 
   return (
@@ -43,33 +39,37 @@ export function DashboardPage() {
         <QuickAccessGrid />
       </section>
 
-      <section aria-label="Recommended profiles">
-        <SectionHeading title="New profiles" />
-        {recommended.length > 0 ? (
-          <ProfileCarousel profiles={recommended} />
-        ) : (
-          <EmptyState
-            icon={<Sparkles className="size-5" aria-hidden="true" />}
-            title="No recommendations yet"
-            description="Recommendations will appear here once your profile is complete."
-          />
-        )}
+      <section aria-label="Unmarried bride profiles">
+        <SectionHeading title="Unmarried Profiles - Bride" />
+        <InfiniteProfileCarousel type="unmarried" gender="Female" initialProfiles={(state.data as any).sections?.unmarriedBride} />
       </section>
 
-      <section aria-label="Recently added profiles">
-        <SectionHeading title="Recently added" />
-        {recentlyAdded.length > 0 ? (
-          <ProfileCarousel profiles={recentlyAdded} />
-        ) : (
-          <EmptyState
-            icon={<UserPlus className="size-5" aria-hidden="true" />}
-            title="New profiles coming soon"
-            description="Newly registered profiles will appear here."
-          />
-        )}
+      <section aria-label="Unmarried groom profiles">
+        <SectionHeading title="Unmarried Profiles - Groom" />
+        <InfiniteProfileCarousel type="unmarried" gender="Male" initialProfiles={(state.data as any).sections?.unmarriedGroom} />
       </section>
 
-      {successStories.length > 0 ? <SuccessStories stories={successStories} /> : null}
+      <section aria-label="Remarriage bride profiles">
+        <SectionHeading title="Remarriage Profiles - Bride" />
+        <InfiniteProfileCarousel type="remarriage" gender="Female" initialProfiles={(state.data as any).sections?.remarriageBride} />
+      </section>
+
+      <section aria-label="Remarriage groom profiles">
+        <SectionHeading title="Remarriage Profiles - Groom" />
+        <InfiniteProfileCarousel type="remarriage" gender="Male" initialProfiles={(state.data as any).sections?.remarriageGroom} />
+      </section>
+
+      <section aria-label="NRI bride profiles">
+        <SectionHeading title="NRI Profiles - Bride" />
+        <InfiniteProfileCarousel type="nri" gender="Female" initialProfiles={(state.data as any).sections?.nriBride} />
+      </section>
+
+      <section aria-label="NRI groom profiles">
+        <SectionHeading title="NRI Profiles - Groom" />
+        <InfiniteProfileCarousel type="nri" gender="Male" initialProfiles={(state.data as any).sections?.nriGroom} />
+      </section>
+
+      {/* Success stories section removed as per requirements */}
 
       {announcements.length > 0 && !isPreview ? (
         <section aria-label="Notifications">

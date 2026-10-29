@@ -12,6 +12,7 @@ import type {
   AuthUser,
   LoginCredentials,
 } from '@/features/auth/types'
+import { REGISTRATION_DRAFT_KEY, sessionStore } from '@/lib/storage'
 import { setAuthTokenProvider, setUnauthorizedHandler } from '@/services/api'
 
 /**
@@ -59,6 +60,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const logout = useCallback(async () => {
     await authService.logout()
+    sessionStore.remove(REGISTRATION_DRAFT_KEY)
     applySession(null)
   }, [applySession])
 
@@ -66,6 +68,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setAuthTokenProvider(() => tokenRef.current)
     setUnauthorizedHandler(() => {
       tokenRef.current = null
+      sessionStore.remove(REGISTRATION_DRAFT_KEY)
       setUser(null)
       setStatus('unauthenticated')
     })

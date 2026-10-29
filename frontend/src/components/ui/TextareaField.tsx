@@ -19,7 +19,7 @@ export function TextareaField({
   const fieldId = id ?? generatedId
 
   return (
-    <div className={cn('flex flex-col gap-1.5', className)}>
+    <div className={cn('flex min-w-0 flex-col gap-1.5', className)}>
       <label htmlFor={fieldId} className="text-xs font-semibold text-maroon">
         {label}
       </label>
@@ -28,7 +28,7 @@ export function TextareaField({
         aria-invalid={error ? true : undefined}
         aria-describedby={error ? `${fieldId}-error` : undefined}
         className={cn(
-          'min-h-24 w-full rounded-lg border bg-surface px-3 py-2 text-sm text-ink transition outline-none',
+          'min-h-24 min-w-0 w-full rounded-lg border bg-surface px-3 py-2 text-sm text-ink shadow-soft transition-colors outline-none hover:border-maroon/30',
           'focus:border-maroon focus:ring-2 focus:ring-maroon/15',
           error ? 'border-danger/50' : 'border-line-strong',
         )}

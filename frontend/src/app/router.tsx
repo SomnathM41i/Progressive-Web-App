@@ -4,8 +4,12 @@ import { ScrollToTop } from '@/app/ScrollToTop'
 import { AuthLayout } from '@/layouts/AuthLayout'
 import { AppLayout } from '@/layouts/AppLayout'
 import { RedirectIfAuthenticated, RequireAuth } from '@/app/guards'
+import { ProfileBiodataPage } from '@/features/profiles/pages/ProfileBiodataPage'
+import { PrivacyPolicyPage } from '@/features/legal/pages/PrivacyPolicyPage'
+import { TermsConditionsPage } from '@/features/legal/pages/TermsConditionsPage'
+import { DisclaimerPage } from '@/features/legal/pages/DisclaimerPage'
 import { NotFoundPage } from '@/app/NotFoundPage'
-import { routes } from '@/config/routes'
+import { routes, legalRoutes } from '@/config/routes'
 
 import { WelcomePage } from '@/features/auth/pages/WelcomePage'
 import { LoginPage } from '@/features/auth/pages/LoginPage'
@@ -29,7 +33,6 @@ import { ProfileHoroscopePage } from '@/features/profiles/pages/ProfileHoroscope
 import { ProfilePartnerPreferencePage } from '@/features/profiles/pages/ProfilePartnerPreferencePage'
 import { ProfilePhotosPage } from '@/features/profiles/pages/ProfilePhotosPage'
 import { ProfileDocumentsPage } from '@/features/profiles/pages/ProfileDocumentsPage'
-import { ProfileBiodataPage } from '@/features/profiles/pages/ProfileBiodataPage'
 import { ProfileSettingsPage } from '@/features/profiles/pages/ProfileSettingsPage'
 import { ProfileMembershipPage } from '@/features/profiles/pages/ProfileMembershipPage'
 import { ProfileDetailPage } from '@/features/profiles/pages/ProfileDetailPage'
@@ -99,6 +102,9 @@ export function AppRouter() {
           </Route>
         </Route>
 
+        <Route path={legalRoutes.privacyPolicy} element={<PrivacyPolicyPage />} />
+        <Route path={legalRoutes.termsConditions} element={<TermsConditionsPage />} />
+        <Route path={legalRoutes.disclaimer} element={<DisclaimerPage />} />
         <Route path="*" element={<NotFoundPage />} />
       </Routes>
     </BrowserRouter>

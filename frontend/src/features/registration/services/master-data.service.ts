@@ -11,6 +11,7 @@ type MasterRow = Record<string, unknown>
 type OptionMapper = (row: MasterRow) => MasterOption | null
 
 const cache = new Map<string, Promise<MasterOption[]>>()
+const rowCache = new Map<string, Promise<MasterRow[]>>()
 
 function text(value: unknown): string {
   return typeof value === 'string' ? value.trim() : ''
@@ -60,7 +61,10 @@ async function load(
     .then(({ data }) => {
       const options = rowsFrom(data)
         .map(mapper)
-        .filter((option): option is MasterOption => option !== null)
+        .filter(
+          (option): option is MasterOption =>
+            option !== null && !/^-{3,}/.test(option.label),
+        )
       return options
     })
     .catch((error: unknown) => {
@@ -70,6 +74,40 @@ async function load(
 
   cache.set(key, request)
   return request
+}
+
+function loadAllRows(path: string): Promise<MasterRow[]> {
+  const cached = rowCache.get(path)
+  if (cached) return cached
+
+  const request = api
+    .get<unknown>(path)
+    .then(({ data }) => rowsFrom(data))
+    .catch((error: unknown) => {
+      rowCache.delete(path)
+      throw toApiError(error)
+    })
+
+  rowCache.set(path, request)
+  return request
+}
+
+function filterRowsBy(rows: MasterRow[], key: string, value: string): MasterRow[] {
+  const wanted = value.trim().toLowerCase()
+  return rows.filter((row) => text(row[key]).toLowerCase() === wanted)
+}
+
+function optionsFromRows(
+  rows: MasterRow[],
+  valueKey: string,
+  labelKey: string,
+): MasterOption[] {
+  return rows
+    .map((row) => mapOption(row, valueKey, labelKey))
+    .filter(
+      (option): option is MasterOption =>
+        option !== null && !/^-{3,}/.test(option.label),
+    )
 }
 
 function simple(path: string, valueKey: string, labelKey: string) {
@@ -115,10 +153,38 @@ export const masterDataService = {
     dependent('/get-district-list.php', 'state', 'dist', 'dist', state),
   cities: (district: string) =>
     dependent('/get-city-list.php', 'district', 'city', 'city', district),
+  citiesForTaluka: async (taluka: string) => {
+    const direct = await dependent(
+      '/get-city-list.php',
+      'taluka',
+      'city',
+      'city',
+      taluka,
+    )
+    if (direct.length) return direct
+    const rows = await loadAllRows('/get-all-city-list.php')
+    return optionsFromRows(filterRowsBy(rows, 'taluka', taluka), 'city', 'city')
+  },
+  allCities: async () =>
+    optionsFromRows(await loadAllRows('/get-all-city-list.php'), 'city', 'city'),
   talukas: (district: string) =>
     dependent('/get-taluka-list.php', 'district', 'taluka', 'taluka', district),
+  talukasForDistrict: async (district: string) => {
+    const direct = await dependent(
+      '/get-taluka-list.php',
+      'district',
+      'taluka',
+      'taluka',
+      district,
+    )
+    if (direct.length) return direct
+    const rows = await loadAllRows('/get-all-talukas.php')
+    return optionsFromRows(filterRowsBy(rows, 'district', district), 'taluka', 'taluka')
+  },
+  allTalukas: async () =>
+    optionsFromRows(await loadAllRows('/get-all-talukas.php'), 'taluka', 'taluka'),
   educations: simple('/get-education-list.php', 'edu', 'edu'),
-  incomes: simple('/get-income-list.php', 'income', 'income'),
+  incomes: simple('/get-income-list.php', 'value', 'income'),
   occupations: simple('/get-occupations-list.php', 'occu', 'occu'),
   allOccupations: simple('/get-all-occupations-list.php', 'occu', 'occu'),
   employedIn: simple('/get-employed_in-list.php', 'employed', 'employed'),
@@ -126,11 +192,11 @@ export const masterDataService = {
   bloodGroups: simple('/get-blood_group-list.php', 'type', 'type'),
   complexions: simple('/get-complexion-list.php', 'complexion', 'complexion'),
   specialCases: simple('/get-special_case-list.php', 'case_type', 'case_type'),
-  iitUniversities: simple('/get-iit-universities-list.php', 'university', 'university'),
-  familyValues: simple('/get-family_values-list.php', 'value', 'value'),
-  familyTypes: simple('/get-family_type-list.php', 'type', 'type'),
-  familyStatuses: simple('/get-family_status-list.php', 'status', 'status'),
-  motherTongues: simple('/get-mother_tounge-list.php', 'language', 'language'),
+  iitUniversities: simple('/get-iit-universities-list.php', 'name', 'name'),
+  familyValues: simple('/get-family_values-list.php', 'family_values', 'family_values'),
+  familyTypes: simple('/get-family_type-list.php', 'family_typ', 'family_typ'),
+  familyStatuses: simple('/get-family_status-list.php', 'family_status', 'family_status'),
+  motherTongues: simple('/get-mother_tounge-list.php', 'mother_tounge', 'mother_tounge'),
   brothers: simple('/get-no_of_brother-list.php', 'number', 'number'),
   sisters: simple('/get-no_of_sister-list.php', 'number', 'number'),
   familyWealth: simple('/get-family_wealth-list.php', 'wealth', 'wealth'),
@@ -142,4 +208,6 @@ export const masterDataService = {
   shani: simple('/get-shani-list.php', 'type', 'type'),
   manglik: simple('/get-manglik-list.php', 'type', 'type'),
   birthAmPm: simple('/get-brithampm-list.php', 'birthampm', 'birthampm'),
+  fromAges: simple('/get-fromage-list.php', 'fromage', 'fromage'),
+  toAges: simple('/get-toage-list.php', 'toage', 'toage'),
 }

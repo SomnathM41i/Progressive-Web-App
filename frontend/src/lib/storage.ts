@@ -1,3 +1,6 @@
+/** Session-scoped keys shared across features. */
+export const REGISTRATION_DRAFT_KEY = 'shivaraj.registration'
+
 /**
  * Small, typed wrapper around sessionStorage.
  *

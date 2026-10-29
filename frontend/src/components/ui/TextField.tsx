@@ -24,15 +24,15 @@ export function TextField({
   const describedBy = error ? `${fieldId}-error` : hint ? `${fieldId}-hint` : undefined
 
   return (
-    <div className={cn('flex flex-col gap-1.5', className)}>
+    <div className={cn('flex min-w-0 flex-col gap-1.5', className)}>
       <label htmlFor={fieldId} className="text-xs font-semibold text-maroon">
         {label}
       </label>
 
-      <div
-        className={cn(
-          'flex items-center gap-2 rounded-lg border bg-surface px-3 transition',
-          'focus-within:ring-2 focus-within:ring-maroon/15',
+        <div
+          className={cn(
+            'flex min-w-0 items-center gap-2 rounded-lg border bg-surface px-3 shadow-soft transition-colors hover:border-maroon/30',
+            'focus-within:ring-2 focus-within:ring-maroon/15',
           error
             ? 'border-danger/50 focus-within:border-danger'
             : 'border-line-strong focus-within:border-maroon',
@@ -48,7 +48,7 @@ export function TextField({
           id={fieldId}
           aria-invalid={error ? true : undefined}
           aria-describedby={describedBy}
-          className="h-[var(--control-height)] w-full bg-transparent text-sm text-ink outline-none placeholder:text-muted/60"
+          className="h-[var(--control-height)] min-w-0 w-full bg-transparent text-sm text-ink outline-none placeholder:text-muted/60"
           {...rest}
         />
       </div>

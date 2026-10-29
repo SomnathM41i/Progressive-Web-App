@@ -15,7 +15,7 @@ import {
   nextRegistrationStep,
   registrationStepPath,
 } from '@/features/registration/steps'
-import type { NriDetails } from '@/features/registration/types'
+import type { NriDetails, NriUpdatePayload } from '@/features/registration/types'
 import { useToast } from '@/hooks/useToast'
 import { toApiError } from '@/services/api-error'
 
@@ -173,8 +173,14 @@ export function NriStepPage() {
       nri_preferred_country: form.nri_preferred_country.trim(),
     }
 
+    const updatePayload = Object.fromEntries(
+      Object.entries(payload).filter(
+        ([key, value]) => key === 'MatriID' || String(value).trim(),
+      ),
+    ) as NriUpdatePayload
+
     try {
-      const result = await registrationService.submitNriDetails(payload)
+      const result = await registrationService.submitNriDetails(updatePayload)
       saveSection('nri', payload)
       toast.success('NRI details saved', { description: result.message || undefined })
       const next = nextRegistrationStep('nri', profileLocationType)
@@ -195,10 +201,14 @@ export function NriStepPage() {
   }))
 
   return (
-    <form className="flex flex-1 flex-col pb-6" onSubmit={handleSubmit} noValidate>
+    <form className="flex flex-1 flex-col pb-2" onSubmit={handleSubmit} noValidate>
       <div className="space-y-5">
-        <Card className="space-y-4">
+        <Card className="registration-section-card space-y-4">
           <h2 className="text-base font-semibold text-maroon">Overseas details</h2>
+          <p className="text-sm text-muted">
+            NRI details cannot be loaded from the server. Re-enter every detail
+            you want to keep; blank optional fields are not submitted.
+          </p>
           <div className="grid gap-3 sm:grid-cols-2">
             <SelectField
               label="NRI type"
@@ -236,7 +246,7 @@ export function NriStepPage() {
           </div>
         </Card>
 
-        <Card className="space-y-4">
+        <Card className="registration-section-card space-y-4">
           <h2 className="text-base font-semibold text-maroon">Visa and residency</h2>
           <div className="grid gap-3 sm:grid-cols-2">
             <SelectField
@@ -291,7 +301,7 @@ export function NriStepPage() {
           </div>
         </Card>
 
-        <Card className="space-y-4">
+        <Card className="registration-section-card space-y-4">
           <h2 className="text-base font-semibold text-maroon">Preference</h2>
           <div className="grid gap-3 sm:grid-cols-2">
             <SelectField
@@ -332,7 +342,7 @@ export function NriStepPage() {
         </Card>
       </div>
 
-      <div className="mt-6">
+      <div className="registration-submit-bar mt-4">
         <Button
           type="submit"
           fullWidth

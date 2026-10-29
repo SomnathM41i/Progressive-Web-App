@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import type { FormEvent } from 'react'
 import { useNavigate } from 'react-router-dom'
 
@@ -157,6 +157,43 @@ function isRealDate(day: string, month: string, year: string): boolean {
   )
 }
 
+function ageFromBirthDate(day: string, month: string, year: string): number | null {
+  const date = Number(day)
+  const monthNumber = Number(month)
+  const yearNumber = Number(year)
+  if (!date || !monthNumber || !yearNumber) return null
+  if (!isRealDate(day, month, year)) return null
+
+  const today = new Date()
+  let age = today.getFullYear() - yearNumber
+  const monthDiff = today.getMonth() + 1 - monthNumber
+  if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < date)) age -= 1
+  return age > 0 ? age : null
+}
+
+function suggestedAbout(form: AccountFormState): string {
+  const name = [form.fname, form.middle_name, form.lname]
+    .map((part) => part.trim())
+    .filter(Boolean)
+    .join(' ')
+  if (!name) return ''
+
+  const age = ageFromBirthDate(form.dob, form.dobMonth, form.dobYear)
+  const details = [
+    age ? `${age} years old` : '',
+    form.maritalstatus.trim().toLowerCase(),
+    form.gender.trim().toLowerCase(),
+  ]
+    .filter(Boolean)
+    .join(', ')
+  const community = [form.religion.trim(), form.caste.trim()].filter(Boolean).join(' ')
+
+  let sentence = `I am ${name}`
+  if (details) sentence += `, ${details}`
+  if (community) sentence += `, from the ${community} community`
+  return `${sentence}. I am looking for a compatible life partner.`
+}
+
 export function AccountStepPage() {
   const navigate = useNavigate()
   const toast = useToast()
@@ -171,6 +208,7 @@ export function AccountStepPage() {
   })
   const [submitting, setSubmitting] = useState(false)
   const [errors, setErrors] = useState<Record<string, string>>({})
+  const aboutEdited = useRef(false)
 
   const [relations, setRelations] = useState<MasterOption[]>([])
   const [maritalStatuses, setMaritalStatuses] = useState<MasterOption[]>([])
@@ -184,44 +222,45 @@ export function AccountStepPage() {
   useEffect(() => {
     let active = true
 
-    Promise.all([
+    Promise.allSettled([
       masterDataService.relations(),
       masterDataService.maritalStatuses(),
       masterDataService.religions(),
       masterDataService.countries(),
       masterDataService.days(),
       masterDataService.years(),
-    ])
-      .then(
-        ([
-          relationOptions,
-          statusOptions,
-          religionOptions,
-          countryOptions,
-          dayOptions,
-          yearOptions,
-        ]) => {
-          if (!active) return
-          setRelations(relationOptions)
-          setMaritalStatuses(statusOptions)
-          setReligions(religionOptions)
-          setCountries(countryOptions)
-          setDays(dayOptions)
-          setYears([...yearOptions].reverse())
-          setForm((current) => {
-            if (current.countrycode) return current
-            const india = countryOptions.find((option) =>
-              option.label.startsWith('India '),
-            )
-            return india ? { ...current, countrycode: india.value } : current
-          })
-        },
-      )
-      .catch((error: unknown) => {
-        if (!active) return
-        const apiError = toApiError(error)
-        toast.error('Could not load form options', { description: apiError.message })
+    ]).then((results) => {
+      if (!active) return
+      const pick = (index: number) => {
+        const result = results[index]
+        return result.status === 'fulfilled' ? result.value : []
+      }
+      const relationOptions = pick(0)
+      const statusOptions = pick(1)
+      const religionOptions = pick(2)
+      const countryOptions = pick(3)
+      const dayOptions = pick(4)
+      const yearOptions = pick(5)
+
+      setRelations(relationOptions)
+      setMaritalStatuses(statusOptions)
+      setReligions(religionOptions)
+      setCountries(countryOptions)
+      setDays(dayOptions)
+      setYears([...yearOptions].reverse())
+      setForm((current) => {
+        if (current.countrycode) return current
+        const india = countryOptions.find((option) => option.label.startsWith('India '))
+        return india ? { ...current, countrycode: india.value } : current
       })
+
+      const failed = results.find((result) => result.status === 'rejected')
+      if (failed?.status === 'rejected') {
+        toast.error('Could not load some form options', {
+          description: toApiError(failed.reason).message,
+        })
+      }
+    })
 
     return () => {
       active = false
@@ -274,20 +313,35 @@ export function AccountStepPage() {
     key: K,
     value: AccountFormState[K],
   ) {
-    setForm((current) => ({ ...current, [key]: value }))
+    if (key === 'aboutus') aboutEdited.current = true
+    setForm((current) => {
+      const next = { ...current, [key]: value }
+      if (key !== 'aboutus' && !aboutEdited.current) {
+        next.aboutus = suggestedAbout(next)
+      }
+      return next
+    })
     setErrors((current) => ({ ...current, [key]: '' }))
   }
 
   function updateReligion(value: string) {
     setCastes([])
     setSubcastes([])
-    setForm((current) => ({ ...current, religion: value, caste: '', subcaste: '' }))
+    setForm((current) => {
+      const next = { ...current, religion: value, caste: '', subcaste: '' }
+      if (!aboutEdited.current) next.aboutus = suggestedAbout(next)
+      return next
+    })
     setErrors((current) => ({ ...current, religion: '', caste: '', subcaste: '' }))
   }
 
   function updateCaste(value: string) {
     setSubcastes([])
-    setForm((current) => ({ ...current, caste: value, subcaste: '' }))
+    setForm((current) => {
+      const next = { ...current, caste: value, subcaste: '' }
+      if (!aboutEdited.current) next.aboutus = suggestedAbout(next)
+      return next
+    })
     setErrors((current) => ({ ...current, caste: '', subcaste: '' }))
   }
 
@@ -302,16 +356,27 @@ export function AccountStepPage() {
   }
 
   function updateMaritalStatus(value: string) {
-    setForm((current) => ({
-      ...current,
-      maritalstatus: value,
-      ...(value === 'Unmarried' ? { noofchildren: 'None', childrenstatus: '' } : {}),
-    }))
+    setForm((current) => {
+      const next = {
+        ...current,
+        maritalstatus: value,
+        ...(value === 'Unmarried'
+          ? {
+              noofchildren: 'None',
+              childrenstatus: '',
+              child_acceptance: 'Do Not Accept Children',
+            }
+          : {}),
+      }
+      if (!aboutEdited.current) next.aboutus = suggestedAbout(next)
+      return next
+    })
     setErrors((current) => ({
       ...current,
       maritalstatus: '',
       noofchildren: '',
       childrenstatus: '',
+      child_acceptance: '',
     }))
   }
 
@@ -349,9 +414,9 @@ export function AccountStepPage() {
     if (form.maritalstatus && form.maritalstatus !== 'Unmarried') {
       if (!form.noofchildren.trim()) next.noofchildren = 'Select number of children'
       if (!form.childrenstatus.trim()) next.childrenstatus = 'Select children status'
-    }
-    if (!form.child_acceptance.trim()) {
-      next.child_acceptance = 'Select child acceptance'
+      if (!form.child_acceptance.trim()) {
+        next.child_acceptance = 'Select child acceptance'
+      }
     }
     if (!form.religion.trim()) next.religion = 'Select religion'
     if (!form.caste.trim()) next.caste = 'Select caste'
@@ -439,9 +504,9 @@ export function AccountStepPage() {
   }
 
   return (
-    <form className="flex flex-1 flex-col pb-6" onSubmit={handleSubmit} noValidate>
+    <form className="flex flex-1 flex-col pb-2" onSubmit={handleSubmit} noValidate>
       <div className="space-y-5">
-        <Card className="space-y-4">
+        <Card className="registration-section-card space-y-4">
           <div className="flex items-center justify-between">
             <h2 className="text-base font-semibold text-maroon">Profile type</h2>
             <Badge tone="brand">
@@ -470,7 +535,7 @@ export function AccountStepPage() {
           </div>
         </Card>
 
-        <Card className="space-y-4">
+        <Card className="registration-section-card space-y-4">
           <h2 className="text-base font-semibold text-maroon">Personal details</h2>
           <div className="grid gap-3 sm:grid-cols-2">
             <TextField
@@ -482,7 +547,7 @@ export function AccountStepPage() {
               required
             />
             <TextField
-              label="Middle name (optional)"
+              label="Middle name"
               value={form.middle_name}
               onChange={(event) => update('middle_name', event.target.value)}
               error={errors.middle_name}
@@ -558,37 +623,39 @@ export function AccountStepPage() {
             />
           </div>
           {form.maritalstatus && form.maritalstatus !== 'Unmarried' ? (
-            <div className="grid gap-3 sm:grid-cols-2">
+            <>
+              <div className="grid gap-3 sm:grid-cols-2">
+                <SelectField
+                  label="Number of children"
+                  value={form.noofchildren}
+                  onChange={(event) => update('noofchildren', event.target.value)}
+                  options={NO_OF_CHILDREN_SELECT_OPTIONS}
+                  error={errors.noofchildren}
+                  required
+                />
+                <SelectField
+                  label="Children status"
+                  value={form.childrenstatus}
+                  onChange={(event) => update('childrenstatus', event.target.value)}
+                  options={CHILDREN_STATUS_SELECT_OPTIONS}
+                  error={errors.childrenstatus}
+                  placeholder="Select children status"
+                  required
+                />
+              </div>
               <SelectField
-                label="Number of children"
-                value={form.noofchildren}
-                onChange={(event) => update('noofchildren', event.target.value)}
-                options={NO_OF_CHILDREN_SELECT_OPTIONS}
-                error={errors.noofchildren}
+                label="Child acceptance"
+                value={form.child_acceptance}
+                onChange={(event) => update('child_acceptance', event.target.value)}
+                options={CHILD_ACCEPTANCE_SELECT_OPTIONS}
+                error={errors.child_acceptance}
                 required
               />
-              <SelectField
-                label="Children status"
-                value={form.childrenstatus}
-                onChange={(event) => update('childrenstatus', event.target.value)}
-                options={CHILDREN_STATUS_SELECT_OPTIONS}
-                error={errors.childrenstatus}
-                placeholder="Select children status"
-                required
-              />
-            </div>
+            </>
           ) : null}
-          <SelectField
-            label="Child acceptance"
-            value={form.child_acceptance}
-            onChange={(event) => update('child_acceptance', event.target.value)}
-            options={CHILD_ACCEPTANCE_SELECT_OPTIONS}
-            error={errors.child_acceptance}
-            required
-          />
         </Card>
 
-        <Card className="space-y-4">
+        <Card className="registration-section-card space-y-4">
           <h2 className="text-base font-semibold text-maroon">
             Religion and community
           </h2>
@@ -624,7 +691,7 @@ export function AccountStepPage() {
           </div>
         </Card>
 
-        <Card className="space-y-4">
+        <Card className="registration-section-card space-y-4">
           <h2 className="text-base font-semibold text-maroon">Contact and login</h2>
           <div className="grid gap-3 sm:grid-cols-2">
             <TextField
@@ -656,7 +723,7 @@ export function AccountStepPage() {
               autoComplete="tel-national"
               required
             />
-            <div />
+            <div className="hidden sm:block" aria-hidden="true" />
             <TextField
               label="Password"
               type="password"
@@ -702,7 +769,17 @@ export function AccountStepPage() {
             aria-describedby={errors.terms_accepted ? 'terms-accepted-error' : undefined}
             className="mt-0.5 size-4 shrink-0 accent-maroon focus-visible:outline-maroon"
           />
-          <span>I agree to the terms and conditions.</span>
+          <span>
+            I agree to the{' '}
+            <a href="/terms-and-conditions" target="_blank" rel="noopener noreferrer" className="text-maroon underline">
+              Terms and Conditions
+            </a>{' '}
+            and{' '}
+            <a href="/privacy-policy" target="_blank" rel="noopener noreferrer" className="text-maroon underline">
+              Privacy Policy
+            </a>
+            .
+          </span>
         </label>
         {errors.terms_accepted ? (
           <p id="terms-accepted-error" role="alert" className="mt-1.5 text-2xs text-danger">
@@ -711,7 +788,7 @@ export function AccountStepPage() {
         ) : null}
       </div>
 
-      <div className="mt-6">
+      <div className="registration-submit-bar mt-4">
         <Button
           type="submit"
           fullWidth

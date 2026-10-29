@@ -33,6 +33,38 @@
   box-shadow: 0 12px 32px rgba(70, 35, 40, 0.12);
 }
 
+/* Registration is a long, task-focused flow. These scoped styles preserve the
+ * app's calm visual language while keeping controls and save actions easy to
+ * use one-handed on smaller screens. */
+.registration-screen {
+  padding-inline: max(1rem, env(safe-area-inset-left, 0px));
+  padding-right: max(1rem, env(safe-area-inset-right, 0px));
+}
+
+.registration-section-card {
+  border-color: var(--color-line-strong);
+  box-shadow: var(--shadow-card);
+}
+
+.registration-submit-bar {
+  position: sticky;
+  bottom: 0;
+  z-index: 10;
+  padding-top: 1rem;
+  padding-bottom: max(1rem, env(safe-area-inset-bottom, 0px));
+  background: linear-gradient(to bottom, transparent, var(--color-cream) 35%);
+}
+
+@media (min-width: 640px) {
+  .registration-screen {
+    padding-inline: 1.5rem;
+  }
+
+  .registration-section-card {
+    padding: 1.5rem;
+  }
+}
+
 @media (min-width: 640px) {
   .welcome-screen {
     max-width: 32rem;

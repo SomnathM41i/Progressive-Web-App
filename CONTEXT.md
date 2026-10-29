@@ -3,7 +3,7 @@
 Single-source orientation file for anyone (human or agent) working on this
 repository. Read this first, then go deeper via the docs listed at the bottom.
 
-Last reviewed: 2026-10-23
+Last reviewed: 2026-10-26
 
 ## What this is
 
@@ -203,12 +203,13 @@ Corrections now in the page:
   `Self`, which sends `0`.
 - `maritalstatus` comes from `get-maritial_status-list.php` (API spelling:
   Unmarried, Divorced, Widower, Widowed, Awaiting Divorce, Seperated).
-- `child_acceptance` is always sent from
+- `child_acceptance` is sent only by account creation (`register.php`), from
   `Do Not Accept Children | Boy Child | Girl Child | Both Boy and Girl Child`,
   defaulting to `Do Not Accept Children`. It is **not present in the Postman
   register sample**, but the live backend rejected the old payload with a child
-  acceptance error, so a valid value is now sent. This still needs a live
-  register test to confirm.
+  acceptance error, so a valid value is now sent. Basic editing must **not**
+  send it: `update-basic-details.php` changes account fields and would otherwise
+  overwrite a value the API does not expose for reading.
 - `middle_name` is validated as letters only and omitted when blank.
 - Children fields (`noofchildren`, `childrenstatus`) are shown and required only
   when a marital status is selected and is not `Unmarried`.
@@ -309,13 +310,25 @@ not wire it into the flow without deciding to remove or repurpose it.
 - Section writes call their `update-*` endpoint. Basic/contact/education/family/
   horoscope/partner read methods are used to prefill empty drafts and populate
   the review summary. NRI has no read method.
+- `saveSection` merges the incoming fields into the existing draft section.
+  Section editors track which fields came from the API (`known`) or the user
+  (`dirty`) and submit only those plus required fields. This avoids sending blank
+  values for fields the read endpoint does not expose.
+- The Basic step now edits account fields through `update-basic-details.php`
+  (full name, DOB, gender, created-by, marital/children, religion/caste,
+  email/mobile, about-us and physical details). It deliberately omits
+  `child_acceptance`. The 20-character about-us rule is relaxed only when the
+  loaded value is itself shorter, so existing data is not blocked from saving.
+- The read endpoints restore horoscope Gan/Nadi to canonical values (`Dev`,
+  `Manushya`, `Rakshas`; `Adi`, `Madhya`, `Antya`) while displaying the existing
+  labels. Legacy values such as `Adhya` and `Dev Gan` are normalised on read.
 
 ### Pending
 
-1. Fix `BasicStepPage.tsx`: it reads `options.relations` for Profile created
-   by but never loads `masterDataService.relations()`, so that select has no
-   options. Recheck the account-to-basic prefill (name, DOB, children) after
-   the fix.
+1. Live-verify Basic account editing through `update-basic-details.php`
+   (name, DOB, email, mobile) and confirm `child_acceptance` stays untouched.
+   Read-only checks show the form prefills from `get-basic-details.php`, but
+   no Basic write has been made.
 2. Verify all master-data row keys against live responses. The collection
    documents request fields but does not include response samples for many of
    these lists, especially education, occupation, income, blood group, family,
@@ -332,11 +345,16 @@ not wire it into the flow without deciding to remove or repurpose it.
    finalize anything.
 6. Decide whether OTP (`send-otp.php` / `verify-otp.php`) belongs in the
    registration flow; it is not integrated.
-7. Live-test register + each `update-*` endpoint, including horoscope file
-   upload and family `property_types` / `investment_types` arrays. No
-   registration endpoint has been submitted to the live server yet.
+7. Live-test each remaining `update-*` endpoint, including horoscope file
+   upload and family `property_types` / `investment_types` arrays. During the
+   Phase 2 audit the Horoscope and Family saves for `SM6990` reached the live
+   API by mistake; read-back confirmed their values were unchanged, but both
+   `Horodate` / `FamilyDate` were regenerated. Basic, contact, education,
+   partner and register still need controlled write tests.
 8. Confirm the exact success/error envelopes and `MatriID` shape; confirm
-   whether `update-*` endpoints replace or merge fields.
+   whether `update-*` endpoints replace or merge fields. The two unintended
+   writes did not settle this question because the submitted values matched the
+   stored values.
 9. Finish cleanup/QA: unused `RegisterPage`, browser back/refresh behaviour,
    mobile layout, and the two pre-existing lint warnings in `MatchesPage.tsx`
    and `ProfilePhotoProvider.tsx`.
@@ -433,8 +451,9 @@ Behaviour now:
 
 ## Known gaps / likely next steps
 
-1. Finish the registration write flow: account and NRI are done; basic, contact,
-   education, family, horoscope, partner and review are still pending.
+1. Finish the registration write flow: account, NRI and Basic account editing are
+   implemented; contact, education, family, horoscope, partner and review still
+   need final live verification.
 2. Give the dashboard a real endpoint so production isn't on the error path.
 3. Add a profile-fetch endpoint so `ProfileDetailPage` stops relying on preview
    data (its interest/shortlist actions are already real).

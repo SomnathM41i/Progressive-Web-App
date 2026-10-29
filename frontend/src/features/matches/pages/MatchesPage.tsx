@@ -1,5 +1,5 @@
 import { Heart } from 'lucide-react'
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 
 import { ScreenHeader } from '@/components/navigation/ScreenHeader'
@@ -18,8 +18,12 @@ export function MatchesPage() {
   const profileId = user?.profileId
   const [matches, setMatches] = useState<ProfilePreview[]>([])
   const [loading, setLoading] = useState(false)
+  const [loadingMore, setLoadingMore] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [reloadNonce, setReloadNonce] = useState(0)
+  const [page, setPage] = useState(1)
+  const [hasMore, setHasMore] = useState(true)
+  const sentinelRef = useRef<HTMLDivElement | null>(null)
 
   useEffect(() => {
     if (!profileId) {
@@ -29,12 +33,23 @@ export function MatchesPage() {
     let cancelled = false
     setLoading(true)
     setError(null)
+    setMatches([])
+    setPage(1)
+    setHasMore(true)
 
     matchesService
-      .fetchMutualMatches(profileId)
-      .then((data) => {
+      .fetchMutualMatches(profileId, 1, 12)
+      .then((res) => {
         if (cancelled) return
-        setMatches(data)
+        setMatches(res.profiles)
+        const p = res.pagination
+        if (p && p.current_page && p.total_pages && p.current_page >= p.total_pages) {
+          setHasMore(false)
+        } else if (p && p.has_next === false) {
+          setHasMore(false)
+        } else if (res.profiles.length === 0) {
+          setHasMore(false)
+        }
       })
       .catch((err: unknown) => {
         if (cancelled) return
@@ -49,6 +64,53 @@ export function MatchesPage() {
       cancelled = true
     }
   }, [profileId, reloadNonce])
+
+  const loadMore = useCallback(async () => {
+    if (!profileId || loadingMore || !hasMore || loading) return
+    setLoadingMore(true)
+    try {
+      const nextPage = page + 1
+      const res = await matchesService.fetchMutualMatches(profileId, nextPage, 12)
+      if (res.profiles.length === 0) {
+        setHasMore(false)
+        return
+      }
+      setMatches((prev) => {
+        const seen = new Set(prev.map((p) => p.id))
+        const merged = [...prev]
+        for (const p of res.profiles) {
+          if (!seen.has(p.id)) merged.push(p)
+        }
+        return merged
+      })
+      setPage(nextPage)
+      const p = res.pagination
+      if (p && p.current_page && p.total_pages && p.current_page >= p.total_pages) {
+        setHasMore(false)
+      } else if (p && p.has_next === false) {
+        setHasMore(false)
+      }
+    } catch {
+      setHasMore(false)
+    } finally {
+      setLoadingMore(false)
+    }
+  }, [profileId, loadingMore, hasMore, loading, page])
+
+  useEffect(() => {
+    const el = sentinelRef.current
+    if (!el || !hasMore) return
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0]?.isIntersecting) {
+          loadMore()
+        }
+      },
+      { rootMargin: '300px' },
+    )
+    observer.observe(el)
+    return () => observer.disconnect()
+  }, [hasMore, loadMore])
 
   const retry = useCallback(() => setReloadNonce((value) => value + 1), [])
 
@@ -82,6 +144,12 @@ export function MatchesPage() {
                 </li>
               ))}
             </ul>
+            {loadingMore ? (
+              <div className="flex items-center justify-center py-3">
+                <Spinner className="size-5" />
+              </div>
+            ) : null}
+            <div ref={sentinelRef} className="h-1" />
           </>
         ) : (
           <div className="rounded-2xl border border-line bg-white px-5 py-10 text-center text-sm text-muted">

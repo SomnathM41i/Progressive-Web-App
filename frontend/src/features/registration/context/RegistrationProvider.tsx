@@ -1,6 +1,8 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import type { ReactNode } from 'react'
 
+import type { AuthStatus } from '@/features/auth/types'
+import { useAuth } from '@/features/auth/hooks/useAuth'
 import {
   PROFILE_LOCATION_TYPES,
   REGISTRATION_SECTION_IDS,
@@ -20,9 +22,7 @@ import type {
   RegistrationDraftSections,
   RegistrationSections,
 } from '@/features/registration/types'
-import { sessionStore } from '@/lib/storage'
-
-const STORAGE_KEY = 'shivaraj.registration'
+import { REGISTRATION_DRAFT_KEY, sessionStore } from '@/lib/storage'
 
 function createEmptyDraft(): RegistrationDraft {
   return {
@@ -35,6 +35,38 @@ function createEmptyDraft(): RegistrationDraft {
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null && !Array.isArray(value)
+}
+
+function isEmptyDraft(draft: RegistrationDraft): boolean {
+  return (
+    !draft.matriId &&
+    !draft.profileLocationType &&
+    draft.completedSections.length === 0 &&
+    Object.keys(draft.sections).length === 0
+  )
+}
+
+/**
+ * Keeps the browser draft tied to the signed-in profile.
+ *
+ * A draft can outlive a session (for example if the tab stays open while a
+ * different member logs in), so anything owned by another profile is discarded
+ * instead of being shown to the new member.
+ */
+function reconcileDraft(
+  draft: RegistrationDraft,
+  status: AuthStatus,
+  profileId: string | null,
+): RegistrationDraft {
+  if (status === 'unknown') return draft
+
+  if (status === 'unauthenticated') {
+    return isEmptyDraft(draft) ? draft : createEmptyDraft()
+  }
+
+  if (!profileId || draft.matriId === profileId) return draft
+
+  return { ...createEmptyDraft(), matriId: profileId }
 }
 
 function isProfileLocationType(value: unknown): value is ProfileLocationType {
@@ -52,7 +84,7 @@ function isSectionId(value: unknown): value is RegistrationSectionId {
 }
 
 function loadDraft(): RegistrationDraft {
-  const raw = sessionStore.read(STORAGE_KEY)
+  const raw = sessionStore.read(REGISTRATION_DRAFT_KEY)
   if (!raw) return createEmptyDraft()
 
   try {
@@ -63,15 +95,18 @@ function loadDraft(): RegistrationDraft {
       typeof parsed.matriId === 'string' && parsed.matriId.trim()
         ? parsed.matriId.trim()
         : null
-    const profileLocationType = isProfileLocationType(parsed.profileLocationType)
-      ? parsed.profileLocationType
-      : ''
     const completedSections = Array.isArray(parsed.completedSections)
       ? [...new Set(parsed.completedSections.filter(isSectionId))]
       : []
     const sections = isRecord(parsed.sections)
       ? (parsed.sections as RegistrationDraftSections)
       : {}
+    const savedType = sections.account?.profile_location_type
+    const profileLocationType = isProfileLocationType(parsed.profileLocationType)
+      ? parsed.profileLocationType
+      : isProfileLocationType(savedType)
+        ? savedType
+        : ''
 
     return { matriId, profileLocationType, completedSections, sections }
   } catch {
@@ -86,12 +121,34 @@ function withSection(
   return sections.includes(section) ? sections : [...sections, section]
 }
 
-export function RegistrationProvider({ children }: { children: ReactNode }) {
-  const [draft, setDraft] = useState<RegistrationDraft>(loadDraft)
+interface RegistrationProviderProps {
+  children: ReactNode
+  /**
+   * Keep the draft in memory only.
+   *
+   * Profile editing saves through the same section methods, but its values
+   * must never leak into an in-progress registration draft (or mark
+   * registration steps complete), so it disables persistence.
+   */
+  persist?: boolean
+}
+
+export function RegistrationProvider({
+  children,
+  persist = true,
+}: RegistrationProviderProps) {
+  const { status, user } = useAuth()
+  const profileId = user?.profileId?.trim() || null
+  const [draft, setDraft] = useState<RegistrationDraft>(() =>
+    persist
+      ? reconcileDraft(loadDraft(), status, profileId)
+      : { ...createEmptyDraft(), matriId: profileId },
+  )
 
   useEffect(() => {
-    sessionStore.write(STORAGE_KEY, JSON.stringify(draft))
-  }, [draft])
+    if (!persist) return
+    sessionStore.write(REGISTRATION_DRAFT_KEY, JSON.stringify(draft))
+  }, [draft, persist])
 
   const saveAccount = useCallback((account: RegistrationAccount, matriId: string) => {
     const { pass, ...accountWithoutPassword } = account
@@ -109,14 +166,21 @@ export function RegistrationProvider({ children }: { children: ReactNode }) {
   const saveSection = useCallback(function saveSection<
     K extends EditableRegistrationSectionId,
   >(section: K, values: RegistrationSections[K]) {
-    setDraft((current) => ({
-      ...current,
-      completedSections: withSection(current.completedSections, section),
-      sections: {
-        ...current.sections,
-        [section]: values,
-      } as RegistrationDraftSections,
-    }))
+    setDraft((current) => {
+      const previous = current.sections[section]
+      const next =
+        isRecord(previous) && isRecord(values)
+          ? { ...previous, ...values }
+          : values
+      return {
+        ...current,
+        completedSections: withSection(current.completedSections, section),
+        sections: {
+          ...current.sections,
+          [section]: next,
+        } as RegistrationDraftSections,
+      }
+    })
   }, [])
 
   const setProfileLocationType = useCallback((value: ProfileLocationType | '') => {

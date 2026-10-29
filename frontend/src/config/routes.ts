@@ -42,3 +42,9 @@ export type RoutePath = (typeof routes)[keyof typeof routes]
 export function profilePath(profileId: string): string {
   return `/profiles/${encodeURIComponent(profileId)}`
 }
+
+export const legalRoutes = {
+  privacyPolicy: '/privacy-policy',
+  termsConditions: '/terms-and-conditions',
+  disclaimer: '/disclaimer',
+} as const

@@ -63,12 +63,20 @@ function mapToProfilePreview(result: MutualMatchResult): ProfilePreview | null {
 }
 
 export interface MatchesService {
-  fetchMutualMatches: (matriId: string) => Promise<ProfilePreview[]>
+  fetchMutualMatches: (
+    matriId: string,
+    page?: number,
+    limit?: number,
+  ) => Promise<{ profiles: ProfilePreview[]; pagination?: MutualMatchApiResponse['pagination'] }>
 }
 
 const matchesServiceImpl: MatchesService = {
-  async fetchMutualMatches(matriId: string): Promise<ProfilePreview[]> {
-    const body = new URLSearchParams({ MatriID: matriId })
+  async fetchMutualMatches(
+    matriId: string,
+    page = 1,
+    limit = 12,
+  ): Promise<{ profiles: ProfilePreview[]; pagination?: MutualMatchApiResponse['pagination'] }> {
+    const body = new URLSearchParams({ MatriID: matriId, page: String(page), limit: String(limit) })
     const { data } = await api.post<MutualMatchApiResponse>(
       '/get-mutual-matches.php',
       body,
@@ -84,9 +92,11 @@ const matchesServiceImpl: MatchesService = {
 
     const rows = Array.isArray(data.results) ? data.results : []
 
-    return rows
+    const profiles = rows
       .map(mapToProfilePreview)
       .filter((profile): profile is ProfilePreview => profile !== null)
+
+    return { profiles, pagination: data.pagination }
   },
 }
 
