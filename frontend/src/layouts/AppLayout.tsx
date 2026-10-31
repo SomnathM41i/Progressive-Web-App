@@ -17,11 +17,12 @@ import { routes } from '@/config/routes'
 export function AppLayout() {
   const location = useLocation()
   const { pathname } = location
-  const isChatScreen = pathname === routes.chat
   const isProfileDetailScreen = pathname.startsWith(`${routes.profile}s/`)
   const isSearchScreen = pathname === routes.search
   const isMatchesScreen = pathname === routes.matches
   const isShortlistScreen = pathname === routes.shortlist
+  const isProfileViewsScreen = pathname === routes.profileViews
+  const isViewedContactsScreen = pathname === routes.viewedContacts
   const isOwnProfileScreen = pathname === routes.profile
   const isProfileEditScreen = pathname === routes.profileEdit
   // Every "/profile/..." sub-screen (basic, contact, …) is its own full-screen
@@ -30,19 +31,21 @@ export function AppLayout() {
   const isInterestsScreen = pathname === routes.interests
   const isMembershipScreen = pathname === routes.membership
   const isStandaloneScreen =
-    isChatScreen ||
     isProfileDetailScreen ||
     isSearchScreen ||
     isProfileSubScreen
-  const isFullScreenScreen = isStandaloneScreen || isMembershipScreen || isMatchesScreen || isShortlistScreen || isOwnProfileScreen || isProfileEditScreen
-  const isHeaderlessScreen = isFullScreenScreen || isInterestsScreen
+  const isFullScreenScreen = isStandaloneScreen || isMembershipScreen || isMatchesScreen || isShortlistScreen || isProfileViewsScreen || isViewedContactsScreen || isProfileEditScreen
+  // Bottom-tab screens with their own ScreenHeader: no app header, but the tab
+  // bar stays so the member can switch tabs.
+  const isTabScreen = isInterestsScreen || isOwnProfileScreen
+  const isHeaderlessScreen = isFullScreenScreen || isTabScreen
 
   return (
     <div className="flex min-h-dvh flex-col bg-cream">
       {!isHeaderlessScreen ? <AppHeader /> : null}
 
-      <main className={isFullScreenScreen ? 'mx-auto h-dvh w-full max-w-lg overflow-hidden md:max-w-2xl' : isInterestsScreen ? 'mx-auto h-[calc(100dvh-var(--app-bottom-nav-height)-env(safe-area-inset-bottom,0px))] w-full max-w-lg overflow-hidden md:h-dvh md:max-w-2xl' : 'mx-auto min-h-0 w-full max-w-lg flex-1 pb-[calc(var(--app-bottom-nav-height)+env(safe-area-inset-bottom,0px))] md:max-w-2xl md:pb-6'}>
-        <div key={location.pathname} className={isFullScreenScreen || isInterestsScreen ? 'h-full min-h-0' : 'animate-rise'}>
+      <main className={isFullScreenScreen ? 'mx-auto h-dvh w-full max-w-lg overflow-hidden md:max-w-2xl' : isTabScreen ? 'mx-auto h-[calc(100dvh-var(--app-bottom-nav-height)-env(safe-area-inset-bottom,0px))] w-full max-w-lg overflow-hidden md:h-dvh md:max-w-2xl' : 'mx-auto min-h-0 w-full max-w-lg flex-1 pb-[calc(var(--app-bottom-nav-height)+env(safe-area-inset-bottom,0px))] md:max-w-2xl md:pb-6'}>
+        <div key={location.pathname} className={isFullScreenScreen || isTabScreen ? 'h-full min-h-0' : 'animate-rise'}>
           <ErrorBoundary key={location.pathname} title="This screen could not be displayed">
             <Outlet />
           </ErrorBoundary>

@@ -11,7 +11,6 @@ const desktopNavItems = [
   { label: 'Home', to: routes.home, end: true },
   { label: 'Search', to: routes.search, end: false },
   { label: 'Shortlist', to: routes.shortlist, end: false },
-  { label: 'Messages', to: routes.chat, end: false },
 ]
 
 export function AppHeader() {

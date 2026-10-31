@@ -405,6 +405,8 @@ export interface PublicProfileService {
     params?: { gender?: 'Male' | 'Female'; page?: number; limit?: number },
   ) => Promise<{ profiles: ProfilePreview[]; pagination?: PublicProfilePagination }>
   fetchDetails: (matriId: string) => Promise<PublicProfile>
+  /** Card-level summary from the details endpoint only, without the section fetches. */
+  fetchSummary: (matriId: string) => Promise<ProfilePreview>
 }
 
 export const publicProfileService: PublicProfileService = {
@@ -427,6 +429,21 @@ export const publicProfileService: PublicProfileService = {
         .filter((profile): profile is ProfilePreview => profile !== null),
       pagination: data.data?.pagination,
     }
+  },
+
+  async fetchSummary(matriId) {
+    const { data } = await api.get<Record<string, unknown>>(DETAILS_PATH, {
+      params: { MatriID: matriId },
+    })
+
+    const record = typeof data === 'object' && data !== null ? payloadOf(data) : null
+    if (!record || (typeof data.status === 'string' && data.status.toLowerCase() === 'error')) {
+      throw new ApiError({ message: 'Could not load this profile.' })
+    }
+
+    const profile = mapProfile(record)
+    if (!profile) throw new ApiError({ message: 'Could not load this profile.' })
+    return { ...profile, photoUrl: withPhotoSize(profile.photoUrl, 500) }
   },
 
   async fetchDetails(matriId) {

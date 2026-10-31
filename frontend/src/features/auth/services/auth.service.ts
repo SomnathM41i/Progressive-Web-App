@@ -135,6 +135,22 @@ const authServiceImpl: AuthService = {
     return session
   },
 
+  async forgotPassword(email: string): Promise<string> {
+    const body = new URLSearchParams({ email: email.trim() })
+    const { data } = await api.post<{ status?: unknown; message?: string }>(
+      '/forgot-password.php',
+      body,
+    )
+
+    if (!isSuccess(data?.status)) {
+      throw new ApiError({
+        message: data?.message || 'Could not process your request. Please try again.',
+      })
+    }
+
+    return data.message || 'Follow the instructions sent to your registered email.'
+  },
+
   async logout(): Promise<void> {
     persist(null)
   },

@@ -4,7 +4,6 @@ import {
   ChevronLeft,
   ChevronRight,
   Heart,
-  MessageCircle,
   X,
 } from 'lucide-react'
 import { Link, useParams } from 'react-router-dom'
@@ -16,6 +15,8 @@ import { Card } from '@/components/ui/Card'
 import { SectionHeading } from '@/components/ui/SectionHeading'
 import { routes } from '@/config/routes'
 import { useAuth } from '@/features/auth/hooks/useAuth'
+import { ContactDetailsSection } from '@/features/contact-details/components/ContactDetailsSection'
+import { useRecordProfileView } from '@/features/profile-views/hooks/useRecordProfileView'
 import { useSentInterests } from '@/features/interests/hooks/useSentInterests'
 import { interestsService } from '@/features/interests/services/interests.service'
 import type { ProfilePreview } from '@/features/profiles/types'
@@ -154,6 +155,9 @@ export function ProfileDetailPage() {
     return () => window.removeEventListener('keydown', onKey)
   }, [lightboxOpen, profile])
 
+  // Only a successfully loaded profile counts as a view.
+  useRecordProfileView(user?.profileId, status === 'ready' ? profile?.id : null)
+
   const retry = useCallback(() => setReloadNonce((value) => value + 1), [])
 
   if (status === 'loading') {
@@ -270,7 +274,7 @@ export function ProfileDetailPage() {
                   src={profile.photoUrl}
                   alt={`${profile.name}'s profile`}
                   fetchPriority="high"
-                  className="size-full object-cover object-[center_28%]"
+                  className="size-full object-cover object-top"
                 />
               ) : (
                 <div className="flex size-full flex-col items-center justify-center gap-2 text-maroon">
@@ -327,17 +331,25 @@ export function ProfileDetailPage() {
           </Card>
         </section>
 
+        {user?.profileId && user.profileId !== profile.id ? (
+          <ContactDetailsSection
+            key={profile.id}
+            memberId={user.profileId}
+            profileId={profile.id}
+          />
+        ) : null}
+
         {profile.sections.map((section) => (
           <SectionBlock key={section.key} section={section} />
         ))}
       </main>
 
-      <footer className="grid shrink-0 grid-cols-2 gap-2.5 border-t border-line bg-white px-4 py-3">
+      <footer className="shrink-0 border-t border-line bg-white px-4 py-3">
         <button
           type="button"
           onClick={() => void handleSendInterest()}
           disabled={interestSent || sendingInterest}
-          className="inline-flex h-11 items-center justify-center gap-1.5 rounded-full border border-maroon px-4 text-sm font-semibold text-maroon hover:bg-rose disabled:cursor-not-allowed disabled:opacity-55"
+          className="inline-flex h-11 w-full items-center justify-center gap-1.5 rounded-full border border-maroon px-4 text-sm font-semibold text-maroon hover:bg-rose disabled:cursor-not-allowed disabled:opacity-55"
         >
           <Heart className="size-4" />
           {interestSent
@@ -346,13 +358,6 @@ export function ProfileDetailPage() {
               ? 'Sending…'
               : 'Send interest'}
         </button>
-        <Link
-          to={routes.chat}
-          className="inline-flex h-11 items-center justify-center gap-1.5 rounded-full bg-maroon px-4 text-sm font-semibold text-white shadow-brand hover:bg-maroon-dark"
-        >
-          <MessageCircle className="size-4" />
-          Chat now
-        </Link>
       </footer>
 
       {lightboxOpen && profile.photos.length ? (

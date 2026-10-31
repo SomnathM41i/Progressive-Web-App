@@ -88,6 +88,12 @@ export function LoginPage() {
               required
             />
 
+            <div className="-mt-1 text-right">
+              <Link to={routes.forgotPassword} className="text-xs font-semibold text-maroon">
+                Forgot password?
+              </Link>
+            </div>
+
             <Button
               type="submit"
               fullWidth

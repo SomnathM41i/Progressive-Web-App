@@ -1,7 +1,6 @@
 import {
   Heart,
   Home,
-  MessageCircle,
   Search,
   UserRound,
   type LucideIcon,
@@ -21,7 +20,6 @@ const bottomNavItems: NavItem[] = [
   { label: 'Home', to: routes.home, icon: Home },
   { label: 'Search', to: routes.search, icon: Search },
   { label: 'Interests', to: routes.interests, icon: Heart },
-  { label: 'Chat', to: routes.chat, icon: MessageCircle },
   { label: 'Profile', to: routes.profile, icon: UserRound },
 ]
 

@@ -2,7 +2,6 @@ import { BadgeCheck, Bookmark, MapPin } from 'lucide-react'
 import { Link } from 'react-router-dom'
 
 import { Avatar } from '@/components/ui/Avatar'
-import { IconButton } from '@/components/ui/IconButton'
 import { profilePath } from '@/config/routes'
 import type { ProfilePreview } from '@/features/profiles/types'
 import { useShortlist } from '@/features/shortlist/hooks/useShortlist'
@@ -38,7 +37,7 @@ export function ProfileCard({ profile, className }: ProfileCardProps) {
             src={profile.photoUrl}
             alt=""
             loading="lazy"
-            className="size-full object-cover object-[center_30%]"
+            className="size-full object-cover object-top"
           />
         ) : (
           <div className="flex size-full items-center justify-center">
@@ -53,23 +52,26 @@ export function ProfileCard({ profile, className }: ProfileCardProps) {
         </span>
       ) : null}
 
-      <IconButton
-        label={saved ? 'Remove from shortlist' : 'Add to shortlist'}
-        size="sm"
+      {/* A plain button: IconButton's `relative` and variant colours would override these. */}
+      <button
+        type="button"
+        aria-label={saved ? 'Remove from shortlist' : 'Add to shortlist'}
+        title={saved ? 'Remove from shortlist' : 'Add to shortlist'}
         aria-pressed={saved}
         onClick={() => toggle(profile)}
         className={cn(
-          'absolute top-2 right-2 z-10 shadow-soft',
+          'absolute top-2 right-2 z-10 inline-flex size-10 items-center justify-center rounded-full shadow-soft transition duration-200 active:scale-95',
           saved
             ? 'bg-maroon text-white hover:bg-maroon-dark'
             : 'bg-white text-maroon hover:bg-rose',
         )}
       >
         <Bookmark
-          className={cn('size-5', saved && 'fill-current')}
+          className="size-5"
+          fill={saved ? 'currentColor' : 'none'}
           aria-hidden="true"
         />
-      </IconButton>
+      </button>
 
       <div className="pointer-events-none absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/85 via-black/50 to-transparent p-4 pt-12">
         <div className="flex items-center gap-1.5">

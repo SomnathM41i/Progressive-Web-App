@@ -12,16 +12,18 @@ import { NotFoundPage } from '@/app/NotFoundPage'
 import { routes, legalRoutes } from '@/config/routes'
 
 import { WelcomePage } from '@/features/auth/pages/WelcomePage'
+import { ForgotPasswordPage } from '@/features/auth/pages/ForgotPasswordPage'
 import { LoginPage } from '@/features/auth/pages/LoginPage'
 import { RegistrationWizardPage } from '@/features/registration/pages/RegistrationWizardPage'
 import { registrationStepPath } from '@/features/registration/steps'
 
 import { DashboardPage } from '@/features/dashboard/pages/DashboardPage'
 import { SearchPage } from '@/features/search/pages/SearchPage'
+import { ViewedContactsPage } from '@/features/contact-details/pages/ViewedContactsPage'
+import { ProfileViewsPage } from '@/features/profile-views/pages/ProfileViewsPage'
 import { ShortlistPage } from '@/features/shortlist/pages/ShortlistPage'
 import { InterestsPage } from '@/features/interests/pages/InterestsPage'
 import { MatchesPage } from '@/features/matches/pages/MatchesPage'
-import { ChatPage } from '@/features/chat/pages/ChatPage'
 import { NotificationsPage } from '@/features/notifications/pages/NotificationsPage'
 import { ProfilePage } from '@/features/profiles/pages/ProfilePage'
 import { ProfileEditPage } from '@/features/profiles/pages/ProfileEditPage'
@@ -57,6 +59,7 @@ export function AppRouter() {
           <Route element={<RedirectIfAuthenticated />}>
             <Route path={routes.welcome} element={<WelcomePage />} />
             <Route path={routes.login} element={<LoginPage />} />
+            <Route path={routes.forgotPassword} element={<ForgotPasswordPage />} />
           </Route>
 
           <Route
@@ -74,7 +77,8 @@ export function AppRouter() {
             <Route path={routes.shortlist} element={<ShortlistPage />} />
             <Route path={routes.interests} element={<InterestsPage />} />
             <Route path={routes.matches} element={<MatchesPage />} />
-            <Route path={routes.chat} element={<ChatPage />} />
+            {/* Chat is hidden for now; old links and bookmarks land on the dashboard. */}
+            <Route path={routes.chat} element={<Navigate to={routes.home} replace />} />
             <Route path={routes.notifications} element={<NotificationsPage />} />
             <Route path={routes.profile} element={<ProfilePage />} />
             <Route path={routes.profileEdit} element={<ProfileEditPage />} />
@@ -96,6 +100,8 @@ export function AppRouter() {
               element={<ProfileMembershipPage />}
             />
             <Route path={routes.profileDetail} element={<ProfileDetailPage />} />
+            <Route path={routes.profileViews} element={<ProfileViewsPage />} />
+            <Route path={routes.viewedContacts} element={<ViewedContactsPage />} />
             <Route path={routes.browse} element={<BrowsePage />} />
             <Route path={routes.membership} element={<MembershipPage />} />
             <Route path={routes.successStories} element={<SuccessStoriesPage />} />

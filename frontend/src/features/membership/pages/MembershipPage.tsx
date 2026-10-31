@@ -139,7 +139,7 @@ export function MembershipPage() {
           </span>
           <h2 className="relative mt-3 text-lg font-semibold">Choose your plan</h2>
           <p className="relative mt-1 max-w-xs text-sm leading-relaxed text-white/80">
-            Unlock verified contacts, chat and complete profile access.
+            Unlock verified contacts and complete profile access.
           </p>
         </section>
 

@@ -6,6 +6,7 @@ export const routes = {
   splash: '/',
   welcome: '/welcome',
   login: '/login',
+  forgotPassword: '/forgot-password',
   register: '/register',
   registerStep: '/register/:step',
 
@@ -30,6 +31,8 @@ export const routes = {
   profileSettings: '/profile/settings',
   profileMembership: '/profile/membership',
   profileDetail: '/profiles/:profileId',
+  profileViews: '/profile-views',
+  viewedContacts: '/viewed-contacts',
 
   membership: '/membership',
   browse: '/browse',

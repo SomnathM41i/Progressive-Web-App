@@ -6,6 +6,7 @@ import {
   type ProfilePhotoContextValue,
 } from '@/features/profiles/context/profile-photo-context'
 import { profileService } from '@/features/profiles/services/profile.service'
+import type { GalleryPhoto } from '@/features/profiles/types'
 
 /**
  * Holds the member's profile photo for the whole app.
@@ -24,7 +25,7 @@ export function ProfilePhotoProvider({ children }: { children: ReactNode }) {
   const { user } = useAuth()
   const memberId = user?.profileId
 
-  const [photoUrl, setPhotoUrl] = useState<string | null>(null)
+  const [photos, setPhotos] = useState<GalleryPhoto[] | null>(null)
   const [reloadNonce, setReloadNonce] = useState(0)
 
   const reload = useCallback(() => setReloadNonce((value) => value + 1), [])
@@ -32,7 +33,7 @@ export function ProfilePhotoProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     // Drop any previous member's photo before this member's gallery resolves,
     // so switching accounts can never show the wrong face.
-    setPhotoUrl(null)
+    setPhotos(null)
 
     if (!memberId) return
 
@@ -40,15 +41,15 @@ export function ProfilePhotoProvider({ children }: { children: ReactNode }) {
 
     profileService
       .fetchPhotos(memberId)
-      .then((photos) => {
+      .then((result) => {
         if (cancelled) return
-        setPhotoUrl(photos[0]?.url ?? null)
+        setPhotos(result)
       })
       .catch(() => {
         if (cancelled) return
         // A failed gallery leaves no photo (initials fallback) rather than a
         // stale one from a different member.
-        setPhotoUrl(null)
+        setPhotos(null)
       })
 
     return () => {
@@ -58,10 +59,15 @@ export function ProfilePhotoProvider({ children }: { children: ReactNode }) {
 
   // Derived, not stored: a signed-out session never shows a photo, so the
   // avatar falls back to initials without needing a state reset.
-  const value = useMemo<ProfilePhotoContextValue>(
-    () => ({ photoUrl: memberId ? photoUrl : null, reload }),
-    [memberId, photoUrl, reload],
-  )
+  const value = useMemo<ProfilePhotoContextValue>(() => {
+    const first = memberId ? photos?.[0] : undefined
+    return {
+      photoUrl: first?.url ?? null,
+      photoPending: first?.status?.trim().toLowerCase() === 'pending',
+      photoCount: memberId && photos ? photos.length : null,
+      reload,
+    }
+  }, [memberId, photos, reload])
 
   return (
     <ProfilePhotoContext.Provider value={value}>{children}</ProfilePhotoContext.Provider>

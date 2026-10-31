@@ -1,9 +1,10 @@
 import {
   BadgeCheck,
   Bookmark,
+  Contact,
+  Eye,
   Heart,
   LifeBuoy,
-  Search,
   Sparkles,
   UserRound,
   type LucideIcon,
@@ -85,7 +86,8 @@ export interface ShortcutTile {
 }
 
 export const shortcutTiles: ShortcutTile[] = [
-  { label: 'Search', to: routes.search, icon: Search },
+  { label: 'Profile views', to: routes.profileViews, icon: Eye },
+  { label: 'Viewed contacts', to: routes.viewedContacts, icon: Contact },
   { label: 'Shortlist', to: routes.shortlist, icon: Bookmark },
   { label: 'Matches', to: routes.matches, icon: Heart },
   { label: 'My profile', to: routes.profile, icon: UserRound },

@@ -6,6 +6,10 @@ export interface ProfilePhotoContextValue {
    * regardless of its moderation status — or `null` when there is none.
    */
   photoUrl: string | null
+  /** True when that photo is still awaiting moderation. */
+  photoPending: boolean
+  /** Number of gallery photos, or `null` while unknown (loading or failed). */
+  photoCount: number | null
   /** Re-fetches the gallery; called after the Photos screen changes. */
   reload: () => void
 }

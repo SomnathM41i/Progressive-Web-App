@@ -41,5 +41,7 @@ export interface AuthService {
   /** Resolves the persisted session, or `null` when there is none. */
   restoreSession: () => Promise<AuthSession | null>
   login: (credentials: LoginCredentials) => Promise<AuthSession>
+  /** Starts password recovery; resolves with the server's confirmation message. */
+  forgotPassword: (email: string) => Promise<string>
   logout: () => Promise<void>
 }

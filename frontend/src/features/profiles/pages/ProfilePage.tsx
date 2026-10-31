@@ -1,6 +1,7 @@
 import {
   Briefcase,
   Contact,
+  Eye,
   FileText,
   Heart,
   Image as ImageIcon,
@@ -21,17 +22,21 @@ import { AppScreen } from '@/components/ui/AppScreen'
 import { Button } from '@/components/ui/Button'
 import { IconLink } from '@/components/ui/IconButton'
 import { ErrorState } from '@/components/states/ErrorState'
+import { business } from '@/config/business'
 import { routes } from '@/config/routes'
 import { useAuth } from '@/features/auth/hooks/useAuth'
+import { planTitle } from '@/features/membership/format'
 import { ProfileHero } from '@/features/profiles/components/ProfileHero'
 import {
   ProfileSectionList,
   type ProfileSectionLink,
 } from '@/features/profiles/components/ProfileSectionList'
+import { formatApiDate, membershipStatus } from '@/features/profiles/dates'
 import { useMyPhoto } from '@/features/profiles/hooks/useMyPhoto'
 import { useProfileResource } from '@/features/profiles/hooks/useProfileResource'
 import { profileService } from '@/features/profiles/services/profile.service'
 import type { MembershipPlan, ProfileSection } from '@/features/profiles/types'
+import type { AsyncResource } from '@/hooks/useAsyncResource'
 import { useToast } from '@/hooks/useToast'
 
 const EMPTY_SECTION: ProfileSection = { fields: [], notes: [] }
@@ -52,9 +57,41 @@ function fieldValue(section: ProfileSection | null, label: string): string | nul
   return section?.fields.find((field) => field.label === label)?.value ?? null
 }
 
-function join(values: Array<string | null | undefined>): string | null {
+function join(values: Array<string | null | undefined>, separator = ' · '): string | null {
   const parts = values.filter((value): value is string => Boolean(value))
-  return parts.length ? parts.join(' · ') : null
+  return parts.length ? parts.join(separator) : null
+}
+
+/**
+ * Row summary for a section resource: `undefined` (no line) until it has
+ * loaded successfully, then the summary or `null` ("Not added yet").
+ */
+function summaryOf(
+  resource: AsyncResource<ProfileSection>,
+  build: (section: ProfileSection) => string | null,
+): string | null | undefined {
+  if (resource.status !== 'ready' || !resource.data) return undefined
+  return build(resource.data)
+}
+
+function photoSummary(count: number | null, pending: boolean): string | null | undefined {
+  if (count === null) return undefined
+  if (count === 0) return null
+  const label = `${count} ${count === 1 ? 'photo' : 'photos'}`
+  return pending ? `${label} · Pending approval` : label
+}
+
+/** Plan title plus validity, e.g. `12 months · Active till 6 Oct 2027`. */
+function membershipSummary(plan: MembershipPlan | null): string {
+  if (!plan?.planName) return 'No active plan'
+
+  const title = planTitle(plan.planName)
+  const expiry = formatApiDate(plan.expiryDate)
+  const { tone } = membershipStatus(plan.expiryDate)
+
+  if (tone === 'active') return expiry ? `${title} · Active till ${expiry}` : title
+  if (tone === 'expired') return expiry ? `${title} · Expired on ${expiry}` : `${title} · Expired`
+  return title
 }
 
 /**
@@ -62,16 +99,23 @@ function join(values: Array<string | null | undefined>): string | null {
  *
  * A hub that summarises the member's profile and links to a dedicated screen
  * for each section. All data comes from read endpoints; nothing here changes
- * server state.
+ * server state. Only cheap summaries are loaded (basic, contact, education,
+ * membership, plus the shared gallery); rows without one show no subtitle
+ * rather than claiming the section is empty.
  */
 export function ProfilePage() {
   const { user, logout } = useAuth()
-  const { photoUrl } = useMyPhoto()
+  const { photoUrl, photoPending, photoCount } = useMyPhoto()
   const toast = useToast()
   const navigate = useNavigate()
   const [loggingOut, setLoggingOut] = useState(false)
 
   const basic = useProfileResource<ProfileSection>(profileService.fetchBasic, EMPTY_SECTION)
+  const contact = useProfileResource<ProfileSection>(profileService.fetchContact, EMPTY_SECTION)
+  const education = useProfileResource<ProfileSection>(
+    profileService.fetchEducation,
+    EMPTY_SECTION,
+  )
   const membership = useProfileResource<MembershipPlan>(profileService.fetchMembership, EMPTY_PLAN)
 
   async function handleLogout() {
@@ -81,6 +125,8 @@ export function ProfilePage() {
       await logout()
       toast.info('Logged out')
       void navigate(routes.welcome, { replace: true })
+    } catch {
+      toast.error('Could not log out. Please try again.')
     } finally {
       setLoggingOut(false)
     }
@@ -90,6 +136,7 @@ export function ProfilePage() {
   const basicLoading = basic.status === 'loading'
   const plan = membership.data
   const membershipLoading = membership.status === 'loading'
+  const planActive = membershipStatus(plan?.expiryDate).tone === 'active'
 
   // The basic-details call drives the whole overview (name, id, facts). If it
   // fails, show a proper error instead of a silently empty profile.
@@ -97,64 +144,82 @@ export function ProfilePage() {
 
   const name = fieldValue(basicData, 'Name') ?? user?.name ?? 'Member'
   const profileId = fieldValue(basicData, 'Profile ID') ?? user?.profileId ?? null
+  const age = fieldValue(basicData, 'Age')
   const facts = [
-    fieldValue(basicData, 'Age') ? `${fieldValue(basicData, 'Age')} yrs` : null,
+    age ? `${age} yrs` : null,
     fieldValue(basicData, 'Height'),
     fieldValue(basicData, 'Marital status'),
   ].filter((fact): fact is string => Boolean(fact))
 
-  const location = join([
-    fieldValue(basicData, 'City'),
-    fieldValue(basicData, 'District'),
-    fieldValue(basicData, 'State'),
-  ])
-
-  const basicSummary = join([
-    fieldValue(basicData, 'Gender'),
-    fieldValue(basicData, 'Religion'),
-    fieldValue(basicData, 'Caste'),
-  ])
+  // Location lives in contact details; basic details carry none. City is often
+  // blank, so taluka stands in for it.
+  const contactData = contact.data
+  const location = join(
+    [
+      fieldValue(contactData, 'City') ?? fieldValue(contactData, 'Taluka'),
+      fieldValue(contactData, 'District'),
+      fieldValue(contactData, 'State'),
+    ],
+    ', ',
+  )
 
   const links: ProfileSectionLink[] = [
     {
       label: 'Basic details',
       to: routes.profileBasic,
       icon: UserRound,
-      summary: basicSummary,
+      summary: summaryOf(basic, (section) =>
+        join([
+          fieldValue(section, 'Gender'),
+          fieldValue(section, 'Religion'),
+          fieldValue(section, 'Caste'),
+        ]),
+      ),
       loading: basicLoading,
     },
-    { label: 'Contact details', to: routes.profileContact, icon: Contact, summary: location },
-    { label: 'Education & career', to: routes.profileEducation, icon: Briefcase, summary: null },
-    { label: 'Family details', to: routes.profileFamily, icon: Users, summary: null },
-    { label: 'Horoscope', to: routes.profileHoroscope, icon: Moon, summary: null },
     {
-      label: 'Partner preference',
-      to: routes.profilePartnerPreference,
-      icon: Heart,
-      summary: null,
+      label: 'Contact details',
+      to: routes.profileContact,
+      icon: Contact,
+      summary: summaryOf(contact, () => location),
+      loading: contact.status === 'loading',
     },
-    { label: 'Photos', to: routes.profilePhotos, icon: ImageIcon, summary: null },
-    { label: 'Documents', to: routes.profileDocuments, icon: FileText, summary: null },
-    { label: 'Biodata', to: routes.profileBiodata, icon: ScrollText, summary: null },
     {
-      label: 'Privacy settings',
-      to: routes.profileSettings,
-      icon: ShieldCheck,
-      summary: null,
+      label: 'Education & career',
+      to: routes.profileEducation,
+      icon: Briefcase,
+      summary: summaryOf(education, (section) =>
+        join([fieldValue(section, 'Education'), fieldValue(section, 'Occupation')]),
+      ),
+      loading: education.status === 'loading',
     },
+    { label: 'Family details', to: routes.profileFamily, icon: Users },
+    { label: 'Horoscope', to: routes.profileHoroscope, icon: Moon },
+    { label: 'Partner preference', to: routes.profilePartnerPreference, icon: Heart },
+    {
+      label: 'Photos',
+      to: routes.profilePhotos,
+      icon: ImageIcon,
+      summary: photoSummary(photoCount, photoPending),
+    },
+    { label: 'Documents', to: routes.profileDocuments, icon: FileText },
+    { label: 'Biodata', to: routes.profileBiodata, icon: ScrollText },
+    { label: 'Profile views', to: routes.profileViews, icon: Eye },
+    { label: 'Privacy settings', to: routes.profileSettings, icon: ShieldCheck },
     {
       label: 'Membership',
       to: routes.profileMembership,
       icon: Sparkles,
-      summary: membershipLoading ? null : (plan?.planName ?? null),
+      summary: membership.status === 'ready' ? membershipSummary(plan) : undefined,
       loading: membershipLoading,
     },
   ]
 
   return (
-    <AppScreen>
+    <AppScreen safeBottom={false}>
       <ScreenHeader
         title="My profile"
+        showBack={false}
         trailing={
           <IconLink to={routes.profileEdit} label="Edit profile" size="sm" variant="plain">
             <PencilLine className="size-4" aria-hidden="true" />
@@ -177,9 +242,11 @@ export function ProfilePage() {
               name={name}
               profileId={profileId}
               photoUrl={photoUrl ?? user?.avatarUrl}
+              photoPending={photoPending}
               location={location}
-              planName={plan?.planName}
+              planName={planActive && plan?.planName ? planTitle(plan.planName) : null}
               facts={facts}
+              loading={basicLoading || contact.status === 'loading'}
             />
 
             {membership.status === 'error' ? (
@@ -190,9 +257,8 @@ export function ProfilePage() {
 
             <ProfileSectionList links={links} />
 
-            <p className="flex items-center justify-center gap-1.5 pt-1 text-2xs text-muted">
-              <UserRound className="size-3.5" aria-hidden="true" />
-              Shivaraj Maratha Matrimony
+            <p className="pt-1 text-center text-2xs text-muted">
+              {business.name} · {business.subBrand}
             </p>
           </>
         )}

@@ -80,6 +80,8 @@ function mapPlan(row: Record<string, unknown>): MembershipPlanOffer | null {
   const features = rawFeatures
     .map((item) => asText(item))
     .filter((item): item is string => item !== null)
+    // Chat is hidden in the app, so its plan benefits are not advertised.
+    .filter((item) => !/\bchat\b/i.test(item))
 
   return {
     id,

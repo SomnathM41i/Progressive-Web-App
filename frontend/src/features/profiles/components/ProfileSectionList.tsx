@@ -10,8 +10,12 @@ export interface ProfileSectionLink {
   label: string
   to: string
   icon: LucideIcon
-  /** One-line preview of the section, or `null` while it is still loading. */
-  summary: string | null
+  /**
+   * One-line preview of the section. `null` means the section was loaded and
+   * is empty ("Not added yet"); `undefined` means no summary is known, so no
+   * line is shown rather than wrongly claiming the section is empty.
+   */
+  summary?: string | null
   loading?: boolean
 }
 
@@ -41,7 +45,7 @@ export function ProfileSectionList({ links }: ProfileSectionListProps) {
                 <span className="block text-sm font-semibold text-ink">{link.label}</span>
                 {link.loading ? (
                   <Skeleton className="mt-1.5 h-3 w-32 rounded-full" />
-                ) : (
+                ) : link.summary === undefined ? null : (
                   <span
                     className={cn(
                       'mt-0.5 block truncate text-xs',

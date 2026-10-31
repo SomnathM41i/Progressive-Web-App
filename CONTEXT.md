@@ -90,10 +90,20 @@ Confirmed in code (all under `VITE_API_BASE_URL`):
 
 | Feature | Endpoint(s) |
 |---|---|
-| Auth | `POST /login.php` |
+| Auth | `POST /login.php`, `POST /forgot-password.php` (`email`; success response not yet seen live) |
 | Matches | `POST /get-mutual-matches.php` |
 | Interests | `/getMyReceivedInterestList.php`, `/getMyPendingInterestList.php`, `/send-interest.php`, `/accept-interest.php`, `/decline-Interest.php`, `/mark-not-interested.php` |
 | Shortlist | `/get-list-MyShortlistedProfiles.php`, `/get-list-WhoShortlistedMyProfile.php`, `/shortlist-user-profile.php`, `/remove-user-from-shortlist.php` |
+| Contact details | `/ViewUserContactDetails.php` (`MatriID`, `ProfileID`; first unlock costs one `remaining_contacts`, repeats are free), `/get-list-MyViewedContactDetails.php` (`MatriID`, `page`; rows embed `ContactDetails`) |
+| Search | `/advance-search.php` — see `features/search/types.ts` for the confirmed contract |
+| Profile views | `/get-list-WhoViewedMyProfile.php`, `/get-list-MyViewedProfiles.php` (`MatriID`, `page`; 8 per page), `/update-ProfileViewCount.php` (`ViewerID`, `ProfileID`) |
+
+Profile-view list rows carry only `MatriID, Education, Occupation, Age, Height,
+ViewedOn` (`DD-MM-YYYY`) plus a photo — `Photo` (bare filename, needs
+`/gallary/`) on "who viewed me", `photo_url` on "my viewed". Names, gender and
+location are filled from `get_profile_details.php` via
+`publicProfileService.fetchSummary`. The server keeps one row per
+viewer/profile pair with the first-view date.
 
 ## Frontend architecture rules
 
@@ -124,12 +134,16 @@ Enforced by existing code and `docs/architecture.md`:
 | Matches (mutual matches) | ✅ Real (`POST /get-mutual-matches.php`) |
 | Interests (received / sent / send / accept / decline / not-interested) | ✅ Real (6 endpoints, paginated lists) |
 | Shortlist (mine / who-shortlisted-me / add / remove) | ✅ Real (4 endpoints) + `ShortlistProvider` context |
+| Contact details (plan-gated unlock on profile, `/viewed-contacts` list) | ✅ Real (2 endpoints) |
+| Profile views (viewed me / I viewed / record view on profile open) | ✅ Real (3 endpoints) — `/profile-views`, dashboard quick-access tile |
 | HTTP client, error model, toasts, guards | ✅ Real |
 | Dashboard data | ⚠️ Stub — throws `ApiNotIntegratedError` unless `VITE_ENABLE_DEV_PREVIEW=true` (placeholder data) |
 | Profile detail | ⚠️ Partial — renders preview data; **Send interest** and **shortlist toggle** are real. No profile-fetch endpoint yet |
 | My Profile section (overview + 11 detail screens) | ✅ Real — read-only, 11 `get-*` endpoints (`docs/profile-plan.md`) |
 | Registration / profile update flows | ⚠️ Wizard steps and review are implemented; live API contract validation and a few payload/UI gaps remain |
-| Search, chat, notifications, success stories | ⛔ Placeholder / mock UI (search and chat have local mock state) |
+| Advanced search | ✅ Real (`POST /advance-search.php`, master-data dropdowns, 24 per page) |
+| Notifications, success stories | ⛔ Placeholder / mock UI |
+| Chat | 🚫 Hidden — all entry points removed, `/chat` redirects to `/home`; `features/chat` is kept unused |
 | Backend business endpoints | ⛔ None (only `/api/health`) |
 
 > Note: `docs/architecture.md` and `docs/api-integration.md` still describe auth
