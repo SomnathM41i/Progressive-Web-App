@@ -15,6 +15,7 @@ import { useRegistration } from '@/features/registration/hooks/useRegistration'
 import { masterDataService } from '@/features/registration/services/master-data.service'
 import type { MasterOption } from '@/features/registration/services/master-data.service'
 import { registrationService } from '@/features/registration/services/registration.service'
+import { HOROSCOPE_FILE_TYPES, validateFile } from '@/features/profiles/services/profile-upload.service'
 import {
   nextRegistrationStep,
   registrationStepPath,
@@ -471,7 +472,8 @@ function readValues(
 
   if (section === 'horoscope') {
     const time = String(record.BirthTime ?? record.TOB ?? '')
-    const match = /(\d{1,2}):(\d{2})(?::(\d{2}))?\s*([AaPp][Mm])?/.exec(time)
+    // The API writes times as `:5:45:PM`, so a colon can precede AM/PM.
+    const match = /(\d{1,2}):(\d{2})(?::(\d{2}))?:?\s*([AaPp][Mm])?/.exec(time)
     if (match) {
       const rawHour = Number(match[1])
       const explicitAmPm = (match[4] ?? '').toUpperCase()
@@ -693,6 +695,9 @@ export function SectionStepPage({
         if (!active) return
         const castes = religions.length ? mergeOptions(results) : []
         setOptions((current) => ({ ...current, caste1: castes }))
+        // An empty list with a religion chosen means the lookup failed, and
+        // that must not erase saved castes.
+        if (religions.length && !castes.length) return
         const allowed = new Set(castes.map((option) => option.value))
         setValues((current) => {
           const selected = splitList(current.caste1 ?? '')
@@ -920,10 +925,31 @@ export function SectionStepPage({
     )
     if (section === 'partner' && Number(values.fromage) > Number(values.toage))
       nextErrors.toage = 'Maximum age must be greater than minimum age'
+    if (section === 'partner' && Number(values.heightfrom) > Number(values.heightto))
+      nextErrors.heightto = 'Maximum height must be greater than minimum height'
+    if (section === 'partner' && Number(values.income_from) > Number(values.income_to))
+      nextErrors.income_to = 'Maximum income must be greater than minimum income'
+    if (section === 'contact') {
+      // Only edited numbers: older profiles may hold formats this would reject.
+      for (const key of ['mobile', 'mobile2', 'work_phone']) {
+        const value = values[key]?.trim()
+        if (value && dirty.current.has(key) && !/^\+?[0-9][0-9 -]{5,14}$/.test(value)) {
+          nextErrors[key] = 'Enter a valid phone number'
+        }
+      }
+    }
     setErrors(nextErrors)
     if (Object.keys(nextErrors).length) {
       toast.error('Please fix the highlighted fields')
       return
+    }
+    if (section === 'horoscope' && horoscopeFile) {
+      try {
+        validateFile(horoscopeFile, HOROSCOPE_FILE_TYPES)
+      } catch (error) {
+        toast.error('Could not use this file', { description: toApiError(error).message })
+        return
+      }
     }
     setSubmitting(true)
     const included = new Set([...known, ...dirty.current, ...requiredKeys])
@@ -955,7 +981,12 @@ export function SectionStepPage({
         otherdist: values.otherdist || basic?.SpecialReason || '',
         aboutus: values.aboutus || basic?.aboutus || '',
       }
-      Object.assign(payload, repeatedBasicFields)
+      // Blanks are dropped: a resumed draft has no basic section, and sending
+      // empty values would overwrite what the server already holds.
+      Object.assign(
+        payload,
+        Object.fromEntries(Object.entries(repeatedBasicFields).filter(([, value]) => value)),
+      )
     }
     try {
       if (section === 'family') {
@@ -1216,7 +1247,7 @@ export function SectionStepPage({
 
   return (
     <form className="flex flex-1 flex-col pb-2" onSubmit={handleSubmit} noValidate>
-      <Card className="registration-section-card grid gap-4 sm:grid-cols-2">
+      <Card className="registration-section-card grid grid-cols-1 gap-4 sm:grid-cols-2">
         <h2 className="text-base font-semibold text-maroon sm:col-span-2">
           {sectionConfig.title}
         </h2>
@@ -1342,10 +1373,10 @@ export function SectionStepPage({
           </div>
         )}
         {section === 'horoscope' && (
-          <label className="flex flex-col gap-1.5 text-xs font-semibold text-maroon sm:col-span-2">
+          <label className="flex min-w-0 flex-col gap-1.5 text-xs font-semibold text-maroon sm:col-span-2">
             Horoscope file (optional)
             {existingHoroscopeFile && (
-              <span className="font-normal text-muted">
+              <span className="font-normal break-all text-muted">
                 Current file: {existingHoroscopeFile}
               </span>
             )}
@@ -1353,11 +1384,12 @@ export function SectionStepPage({
               ref={horoscopeInputRef}
               type="file"
               name="fileToUpload"
+              accept="application/pdf,image/*"
               onChange={(event) => setHoroscopeFile(event.target.files?.[0] ?? null)}
-              className="rounded-lg border border-line-strong bg-surface px-3 py-2 text-sm font-normal text-ink"
+              className="w-full min-w-0 rounded-lg border border-line-strong bg-surface px-3 py-2 text-sm font-normal text-ink"
             />
             {horoscopeFile && (
-              <span className="font-normal text-muted">
+              <span className="font-normal break-all text-muted">
                 Selected: {horoscopeFile.name}
               </span>
             )}
@@ -1377,6 +1409,28 @@ export function SectionStepPage({
       </div>
     </form>
   )
+}
+
+/** Bookkeeping keys that mean nothing to the member reviewing their details. */
+const REVIEW_HIDDEN_KEYS = new Set([
+  'MatriID',
+  'pass',
+  'fileToUpload',
+  'RegStep',
+  'regno',
+  'terms_accepted',
+  'Relation_id',
+  'profile_location_type',
+  'status',
+  'message',
+])
+
+function reviewLabel(key: string): string {
+  const spaced = key
+    .replace(/([a-z0-9])([A-Z])/g, '$1 $2')
+    .replace(/[_-]+/g, ' ')
+    .trim()
+  return spaced.charAt(0).toUpperCase() + spaced.slice(1)
 }
 
 const REVIEW_READS: [string, (id: string) => Promise<Record<string, unknown>>][] = [
@@ -1463,7 +1517,7 @@ export function RegistrationReviewPage() {
     return Object.entries(data)
       .filter(
         ([key, value]) =>
-          !['MatriID', 'pass', 'fileToUpload'].includes(key) &&
+          !REVIEW_HIDDEN_KEYS.has(key) &&
           value !== '' &&
           value !== undefined &&
           value !== null &&
@@ -1471,7 +1525,7 @@ export function RegistrationReviewPage() {
       )
       .map(
         ([key, value]) =>
-          `${key}: ${Array.isArray(value) ? value.join(', ') : String(value)}`,
+          `${reviewLabel(key)}: ${Array.isArray(value) ? value.join(', ') : String(value)}`,
       )
   }
   return (

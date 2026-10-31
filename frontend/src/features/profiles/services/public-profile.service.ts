@@ -275,12 +275,28 @@ const REDUNDANT_KEYS: Record<string, string> = {
 /** Internal bookkeeping keys that are not profile data. */
 const SKIP_KEYS = new Set(['MatriID', 'RegStep'])
 
-function humanize(key: string): string {
-  const spaced = key
-    .replace(/([a-z0-9])([A-Z])/g, '$1 $2')
-    .replace(/[_-]+/g, ' ')
-    .trim()
-  return spaced.charAt(0).toUpperCase() + spaced.slice(1)
+/**
+ * Details sold through the contact unlock (`ViewUserContactDetails.php`). The
+ * section endpoints return them for any member, so they must never be rendered
+ * here or the plan gate means nothing.
+ */
+const PLAN_GATED_KEYS = new Set([
+  'Name',
+  'DOB',
+  'Email',
+  'Mobile',
+  'Father',
+  'Mother',
+  'BirthPlace',
+  'BirthTime',
+  'HoroscopeFile',
+])
+
+/** HTTP 200 carries failures too, so the JSON `status` decides. */
+function isFailure(status: unknown): boolean {
+  if (status === 0 || status === false) return true
+  if (typeof status !== 'string') return false
+  return ['error', 'failed', 'fail', '0'].includes(status.trim().toLowerCase())
 }
 
 function hasValue(record: Record<string, unknown>, key: string): boolean {
@@ -288,8 +304,9 @@ function hasValue(record: Record<string, unknown>, key: string): boolean {
 }
 
 /**
- * Converts one endpoint payload into a renderable section. Every key the API
- * returns is surfaced. When `seen` is supplied, keys already rendered elsewhere
+ * Converts one endpoint payload into a renderable section. Only keys with a
+ * label are surfaced, so a field the API adds later stays private until someone
+ * decides it belongs on a public profile. When `seen` is supplied, keys already rendered elsewhere
  * are skipped — used only for fields that genuinely repeat across endpoints
  * (Height, Weight, Complexion, AboutUs and friends).
  */
@@ -303,7 +320,10 @@ function toSection(
   const notes: PublicProfileField[] = []
 
   for (const [rawKey, rawValue] of Object.entries(record)) {
-    if (SKIP_KEYS.has(rawKey)) continue
+    if (SKIP_KEYS.has(rawKey) || PLAN_GATED_KEYS.has(rawKey)) continue
+
+    const label = LABELS[rawKey]
+    if (!label) continue
 
     const labelPair = REDUNDANT_KEYS[rawKey]
     if (labelPair && hasValue(record, labelPair)) continue
@@ -314,7 +334,6 @@ function toSection(
       seen.add(dedupeKey)
     }
 
-    const label = LABELS[rawKey] ?? humanize(rawKey)
     const value = asText(rawValue)
     const entry: PublicProfileField = { label, value }
     if (NOTE_KEYS.has(rawKey)) notes.push(entry)
@@ -378,7 +397,7 @@ async function fetchSection(
   const body = new URLSearchParams({ MatriID: matriId })
   const { data } = await api.post<Record<string, unknown>>(path, body)
   if (typeof data !== 'object' || data === null) return null
-  if (typeof data.status === 'string' && data.status.toLowerCase() === 'error') return null
+  if (isFailure(data.status)) return null
   return payloadOf(data)
 }
 
@@ -437,7 +456,7 @@ export const publicProfileService: PublicProfileService = {
     })
 
     const record = typeof data === 'object' && data !== null ? payloadOf(data) : null
-    if (!record || (typeof data.status === 'string' && data.status.toLowerCase() === 'error')) {
+    if (!record || isFailure(data.status)) {
       throw new ApiError({ message: 'Could not load this profile.' })
     }
 
@@ -454,14 +473,14 @@ export const publicProfileService: PublicProfileService = {
     if (typeof data !== 'object' || data === null) {
       throw new ApiError({ message: 'The server returned an unexpected response.' })
     }
-    if (typeof data.status === 'string' && data.status.toLowerCase() === 'error') {
+    if (isFailure(data.status)) {
       throw new ApiError({
         message: typeof data.message === 'string' ? data.message : 'Could not load this profile.',
       })
     }
 
     const record = payloadOf(data)
-    if (!record) {
+    if (!record || !asText(pick(record, ['MatriID', 'matri_id', 'display_name']))) {
       throw new ApiError({ message: 'Could not load this profile.' })
     }
 

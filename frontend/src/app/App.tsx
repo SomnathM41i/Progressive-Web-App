@@ -3,6 +3,7 @@ import { SplashScreen } from '@/components/loading/SplashScreen'
 import { useAppInitialization } from '@/hooks/useAppInitialization'
 import { AppRouter } from '@/app/router'
 import { OfflineBanner } from '@/components/feedback/OfflineBanner'
+import { PwaUpdatePrompt } from '@/components/feedback/PwaUpdatePrompt'
 
 /**
  * Top-level application composition.
@@ -26,6 +27,7 @@ export function App() {
     <>
       <OfflineBanner />
       <AppRouter />
+      <PwaUpdatePrompt />
     </>
   )
 }

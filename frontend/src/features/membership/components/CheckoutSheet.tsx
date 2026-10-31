@@ -12,6 +12,7 @@ import {
 import { Spinner } from '@/components/loading/Spinner'
 import { Badge } from '@/components/ui/Badge'
 import { Button } from '@/components/ui/Button'
+import { business } from '@/config/business'
 import { useAuth } from '@/features/auth/hooks/useAuth'
 import { formatAmount, planMeta, planTitle } from '@/features/membership/format'
 import type { MembershipPlanOffer } from '@/features/membership/services/membership.service'
@@ -122,10 +123,10 @@ export function CheckoutSheet({ plan, demo, onClose }: CheckoutSheetProps) {
             <div className="mt-4 flex items-start justify-between gap-3">
               <div className="min-w-0">
                 <p className="text-2xs font-semibold tracking-wide text-muted uppercase">
-                  Secure checkout
+                  {demo ? 'Secure checkout' : 'Membership'}
                 </p>
                 <h2 id="checkout-title" className="text-lg font-semibold text-ink">
-                  Complete your payment
+                  {demo ? 'Complete your payment' : 'Get this plan'}
                 </h2>
               </div>
               <button
@@ -189,8 +190,14 @@ export function CheckoutSheet({ plan, demo, onClose }: CheckoutSheetProps) {
                   </p>
                 </div>
                 <p className="mt-1.5 text-xs leading-relaxed text-muted">
-                  Online checkout will appear here once Razorpay is connected.
+                  To get this plan today, contact the centre.
                 </p>
+                <a
+                  href={business.phoneHref}
+                  className="mt-2 inline-block text-sm font-semibold text-maroon"
+                >
+                  Call {business.phone}
+                </a>
               </div>
             )}
 

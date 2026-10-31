@@ -55,6 +55,9 @@ export function membershipStatus(expiry: string | null | undefined): {
   const date = parseApiDate(expiry)
   if (!date) return { tone: 'unknown', label: 'Status unavailable' }
 
+  // A plain date means the plan runs through that day, not until its first minute.
+  if (!/\d:\d/.test(expiry)) date.setHours(23, 59, 59, 999)
+
   return date.getTime() >= Date.now()
     ? { tone: 'active', label: 'Active' }
     : { tone: 'expired', label: 'Expired' }

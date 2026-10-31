@@ -310,6 +310,8 @@ export function SearchPage() {
     setSearching(true)
     setSearchError(null)
     setMoreError(null)
+    // Any "load more" in flight is now superseded and will not clear this itself.
+    setPendingMore(false)
 
     try {
       const next = await searchService.search(memberId, snapshot)

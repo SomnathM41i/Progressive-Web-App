@@ -92,6 +92,7 @@ export function ProfilePhotosPage() {
           <input
             ref={profileInputRef}
             type="file"
+            aria-label="Choose profile photo"
             accept="image/*"
             onChange={(event) => setProfileFile(event.target.files?.[0] ?? null)}
             className="block w-full text-sm text-ink file:mr-3 file:rounded-full file:border-0 file:bg-rose file:px-3 file:py-2 file:text-xs file:font-semibold file:text-maroon"
@@ -115,6 +116,7 @@ export function ProfilePhotosPage() {
           <input
             ref={galleryInputRef}
             type="file"
+            aria-label="Choose gallery photo"
             accept="image/*"
             onChange={(event) => setGalleryFile(event.target.files?.[0] ?? null)}
             className="block w-full text-sm text-ink file:mr-3 file:rounded-full file:border-0 file:bg-rose file:px-3 file:py-2 file:text-xs file:font-semibold file:text-maroon"

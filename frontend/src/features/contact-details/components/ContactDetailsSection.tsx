@@ -99,11 +99,10 @@ export function ContactDetailsSection({ memberId, profileId }: ContactDetailsSec
   const [unlocking, setUnlocking] = useState(false)
 
   const access = useAsyncResource(async () => {
-    const [existing, plan] = await Promise.all([
-      contactDetailsService.findUnlocked(memberId, profileId),
-      profileService.fetchMembership(memberId),
-    ])
-    return { existing, plan }
+    // Contacts already paid for must show even if the plan lookup fails.
+    const existing = await contactDetailsService.findUnlocked(memberId, profileId)
+    if (existing) return { existing, plan: null }
+    return { existing, plan: await profileService.fetchMembership(memberId) }
   }, [memberId, profileId])
 
   async function handleUnlock() {
@@ -112,7 +111,7 @@ export function ContactDetailsSection({ memberId, profileId }: ContactDetailsSec
     try {
       setUnlocked(await contactDetailsService.unlock(memberId, profileId))
 
-      const remaining = Number(access.data?.plan.remainingContacts)
+      const remaining = Number(access.data?.plan?.remainingContacts)
       toast.success('Contact details unlocked', {
         description: Number.isFinite(remaining) && remaining > 0
           ? `1 contact view used. ${remaining - 1} left.`
@@ -184,7 +183,7 @@ export function ContactDetailsSection({ memberId, profileId }: ContactDetailsSec
 
     const { plan } = access.data
 
-    if (!plan.planName) {
+    if (!plan?.planName) {
       return (
         <LockedCard
           title="Contact details are locked"
@@ -194,7 +193,8 @@ export function ContactDetailsSection({ memberId, profileId }: ContactDetailsSec
       )
     }
 
-    if (membershipStatus(plan.expiryDate).tone !== 'active') {
+    // Only a known past date locks; an unreadable one is left to the server.
+    if (membershipStatus(plan.expiryDate).tone === 'expired') {
       return (
         <LockedCard
           title="Your membership is not active"

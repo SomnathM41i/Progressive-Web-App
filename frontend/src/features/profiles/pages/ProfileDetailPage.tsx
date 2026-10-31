@@ -1,11 +1,5 @@
 import { useCallback, useEffect, useState } from 'react'
-import {
-  Bookmark,
-  ChevronLeft,
-  ChevronRight,
-  Heart,
-  X,
-} from 'lucide-react'
+import { Bookmark, ChevronLeft, ChevronRight, Heart, X } from 'lucide-react'
 import { Link, useParams } from 'react-router-dom'
 
 import { ErrorState } from '@/components/states/ErrorState'
@@ -207,6 +201,7 @@ export function ProfileDetailPage() {
     photoUrl: profile.photoUrl,
   }
 
+  const isOwnProfile = user?.profileId === profile.id
   const saved = isShortlisted(profile.id)
   const interestSent = hasSent(profile.id)
   const meta = [
@@ -238,20 +233,22 @@ export function ProfileDetailPage() {
       <ScreenHeader
         title="Profile details"
         trailing={
-          <button
-            type="button"
-            aria-label={saved ? 'Remove from shortlist' : 'Add to shortlist'}
-            aria-pressed={saved}
-            onClick={() => toggle(preview)}
-            className={cn(
-              'inline-flex size-9 items-center justify-center rounded-full border transition active:scale-95',
-              saved
-                ? 'border-maroon bg-maroon text-white'
-                : 'border-line bg-white text-maroon',
-            )}
-          >
-            <Bookmark className="size-4.5" fill={saved ? 'currentColor' : 'none'} />
-          </button>
+          isOwnProfile ? undefined : (
+            <button
+              type="button"
+              aria-label={saved ? 'Remove from shortlist' : 'Add to shortlist'}
+              aria-pressed={saved}
+              onClick={() => toggle(preview)}
+              className={cn(
+                'inline-flex size-9 items-center justify-center rounded-full border transition active:scale-95',
+                saved
+                  ? 'border-maroon bg-maroon text-white'
+                  : 'border-line bg-white text-maroon',
+              )}
+            >
+              <Bookmark className="size-4.5" fill={saved ? 'currentColor' : 'none'} />
+            </button>
+          )
         }
       />
 
@@ -344,21 +341,23 @@ export function ProfileDetailPage() {
         ))}
       </main>
 
-      <footer className="shrink-0 border-t border-line bg-white px-4 py-3">
-        <button
-          type="button"
-          onClick={() => void handleSendInterest()}
-          disabled={interestSent || sendingInterest}
-          className="inline-flex h-11 w-full items-center justify-center gap-1.5 rounded-full border border-maroon px-4 text-sm font-semibold text-maroon hover:bg-rose disabled:cursor-not-allowed disabled:opacity-55"
-        >
-          <Heart className="size-4" />
-          {interestSent
-            ? 'Interest sent'
-            : sendingInterest
-              ? 'Sending…'
-              : 'Send interest'}
-        </button>
-      </footer>
+      {isOwnProfile ? null : (
+        <footer className="shrink-0 border-t border-line bg-white px-4 py-3">
+          <button
+            type="button"
+            onClick={() => void handleSendInterest()}
+            disabled={interestSent || sendingInterest}
+            className="inline-flex h-11 w-full items-center justify-center gap-1.5 rounded-full border border-maroon px-4 text-sm font-semibold text-maroon hover:bg-rose disabled:cursor-not-allowed disabled:opacity-55"
+          >
+            <Heart className="size-4" />
+            {interestSent
+              ? 'Interest sent'
+              : sendingInterest
+                ? 'Sending…'
+                : 'Send interest'}
+          </button>
+        </footer>
+      )}
 
       {lightboxOpen && profile.photos.length ? (
         <div

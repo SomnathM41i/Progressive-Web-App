@@ -108,6 +108,13 @@ const authServiceImpl: AuthService = {
     })
     const { data } = await api.post<LoginResponse>('/login.php', body)
 
+    // A web page instead of JSON is a server fault, not a wrong password.
+    if (typeof data !== 'object' || data === null) {
+      throw new ApiError({
+        message: 'The server returned an unexpected response. Please try again.',
+      })
+    }
+
     if (!isSuccess(data.status) || !data.data) {
       throw new ApiError({
         message: data.message || 'Invalid username or password',

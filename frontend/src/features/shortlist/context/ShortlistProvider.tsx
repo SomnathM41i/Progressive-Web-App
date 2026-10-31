@@ -56,6 +56,12 @@ export function ShortlistProvider({ children }: { children: ReactNode }) {
   const [reloadNonce, setReloadNonce] = useState(0)
   /** Bumped on every local mutation so an in-flight hydration can be ignored. */
   const mutationRef = useRef(0)
+  /**
+   * Latest list for the toggle handlers. React may defer a state updater until
+   * the next render, so a value assigned inside one cannot decide which API
+   * call to send.
+   */
+  const profilesRef = useRef(profiles)
 
   // On member change, swap the in-memory list and persist under that member's
   // key; never carry the previous member's profiles across.
@@ -63,6 +69,9 @@ export function ShortlistProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     const key = storageKey(memberId)
     if (keyRef.current !== key) {
+      // Names and photos must not outlive the session on a shared device; the
+      // list hydrates from the server at the next sign-in.
+      if (!memberId) localStore.remove(keyRef.current)
       keyRef.current = key
       mutationRef.current += 1
       setHydratedFor(null)
@@ -71,6 +80,7 @@ export function ShortlistProvider({ children }: { children: ReactNode }) {
   }, [memberId])
 
   useEffect(() => {
+    profilesRef.current = profiles
     localStore.write(keyRef.current, JSON.stringify(profiles))
   }, [profiles])
 
@@ -106,15 +116,11 @@ export function ShortlistProvider({ children }: { children: ReactNode }) {
   const toggle = useCallback(
     (profile: ProfilePreview) => {
       mutationRef.current += 1
-      // Derive the current membership inside the updater so the optimistic
-      // write and the rollback both see live state, not a stale closure.
-      let wasSaved = false
-      setProfiles((current) => {
-        wasSaved = current.some((item) => item.id === profile.id)
-        return wasSaved
-          ? current.filter((item) => item.id !== profile.id)
-          : [profile, ...current]
-      })
+      const wasSaved = profilesRef.current.some((item) => item.id === profile.id)
+      const others = profilesRef.current.filter((item) => item.id !== profile.id)
+      // Written now so a second tap before the next render sees this one.
+      profilesRef.current = wasSaved ? others : [profile, ...others]
+      setProfiles(profilesRef.current)
 
       if (!memberId) {
         // Signed-out preview: keep the local-only behaviour.
@@ -151,12 +157,10 @@ export function ShortlistProvider({ children }: { children: ReactNode }) {
 
   const remove = useCallback(
     (profileId: string) => {
-      let victim: ProfilePreview | undefined
+      const victim = profilesRef.current.find((item) => item.id === profileId)
       mutationRef.current += 1
-      setProfiles((current) => {
-        victim = current.find((item) => item.id === profileId)
-        return victim ? current.filter((item) => item.id !== profileId) : current
-      })
+      profilesRef.current = profilesRef.current.filter((item) => item.id !== profileId)
+      setProfiles(profilesRef.current)
 
       if (!memberId) {
         toast.success('Removed from shortlist')

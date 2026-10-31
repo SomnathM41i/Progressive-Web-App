@@ -66,6 +66,8 @@ export function InterestsPage() {
     sent: initialTabState,
   })
   const scrollContainerRef = useRef<HTMLDivElement>(null)
+  /** Interests answered this visit; a refresh already in flight may still list them. */
+  const answeredIds = useRef(new Set<string>())
 
   /** Fetches one page from the API. Pure — callers merge the result themselves. */
   const requestTab = useCallback(
@@ -177,9 +179,34 @@ export function InterestsPage() {
       .catch((err: unknown) => mergeError(tab, err, true))
   }
 
+  /**
+   * Answering removes a row from the server's list, so every later row moves up
+   * a page. Re-reading the loaded pages keeps "Load more" from skipping anyone.
+   */
+  async function refreshReceived(pages: number) {
+    const results = await Promise.all(
+      Array.from({ length: pages }, (_, index) => requestTab('received', index + 1)),
+    )
+    const seen = new Set(answeredIds.current)
+    const entries = results
+      .flatMap((result) => result.entries)
+      .filter((entry) => {
+        if (seen.has(entry.id)) return false
+        seen.add(entry.id)
+        return true
+      })
+    const last = results[results.length - 1]
+    setLists((prev) => ({
+      ...prev,
+      received: { ...prev.received, entries, page: pages, hasMore: last.entries.length > 0 && last.hasMore },
+    }))
+  }
+
   /** Accepts or declines a received interest, then drops it from the list. */
   async function respond(entry: InterestEntry, action: 'accept' | 'decline') {
     if (!profileId) return
+
+    const { hasMore, page } = lists.received
 
     setLists((prev) => ({
       ...prev,
@@ -195,6 +222,7 @@ export function InterestsPage() {
         toast.info('Interest declined')
       }
 
+      answeredIds.current.add(entry.id)
       setLists((prev) => ({
         ...prev,
         received: {
@@ -202,6 +230,11 @@ export function InterestsPage() {
           entries: (prev.received.entries ?? []).filter((item) => item.id !== entry.id),
         },
       }))
+
+      if (hasMore) {
+        // The answer itself succeeded; if this fails the list is only out of date.
+        refreshReceived(page).catch(() => {})
+      }
     } catch (err) {
       toast.error(err instanceof Error ? err.message : 'Could not update this interest')
     } finally {
@@ -276,7 +309,7 @@ export function InterestsPage() {
                             type="button"
                             disabled={state.busyIds.includes(entry.id)}
                             onClick={() => void respond(entry, 'accept')}
-                            className="h-10 min-w-[5rem] rounded-full bg-[#2d9b5b] px-5 text-sm font-semibold text-white transition active:opacity-70 disabled:opacity-55"
+                            className="h-10 min-w-[5rem] rounded-full bg-[#1e7a45] px-5 text-sm font-semibold text-white transition active:opacity-70 disabled:opacity-55"
                           >
                             Accept
                           </button>

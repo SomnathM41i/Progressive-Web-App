@@ -84,6 +84,14 @@ const initialState: NriFormState = {
   nri_preferred_country: '',
 }
 
+/** True only for a real calendar date written as YYYY-MM-DD. */
+function parseIsoDate(value: string): boolean {
+  const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(value.trim())
+  if (!match) return false
+  const date = new Date(Number(match[1]), Number(match[2]) - 1, Number(match[3]))
+  return date.getDate() === Number(match[3]) && date.getMonth() === Number(match[2]) - 1
+}
+
 export function NriStepPage() {
   const navigate = useNavigate()
   const toast = useToast()
@@ -131,6 +139,12 @@ export function NriStepPage() {
       !form.nri_visa_expiry.trim()
     ) {
       next.nri_visa_expiry = 'Enter visa expiry'
+    } else if (
+      form.nri_visa_type !== 'Not Applicable' &&
+      form.nri_visa_expiry.trim() &&
+      !parseIsoDate(form.nri_visa_expiry)
+    ) {
+      next.nri_visa_expiry = 'Use the format YYYY-MM-DD'
     }
     if (!form.nri_willing_to_relocate.trim())
       next.nri_willing_to_relocate = 'Select an option'
@@ -163,7 +177,8 @@ export function NriStepPage() {
       nri_current_city: form.nri_current_city.trim(),
       nri_residency_status: form.nri_residency_status.trim(),
       nri_visa_type: form.nri_visa_type.trim(),
-      nri_visa_expiry: form.nri_visa_expiry.trim(),
+      nri_visa_expiry:
+        form.nri_visa_type === 'Not Applicable' ? '' : form.nri_visa_expiry.trim(),
       nri_years_abroad: form.nri_years_abroad.trim(),
       nri_overseas_mobile: form.nri_overseas_mobile.trim(),
       nri_income_currency: form.nri_income_currency.trim(),

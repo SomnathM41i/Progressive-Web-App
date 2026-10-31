@@ -1,7 +1,7 @@
 import { Navigate, Outlet, useLocation } from 'react-router-dom'
 
 import { PageLoader } from '@/components/loading/PageLoader'
-import { routes } from '@/config/routes'
+import { returnPath, routes } from '@/config/routes'
 import { useAuth } from '@/features/auth/hooks/useAuth'
 
 /**
@@ -19,7 +19,7 @@ export function RequireAuth() {
   }
 
   if (status === 'unauthenticated') {
-    return <Navigate to={routes.welcome} replace state={{ from: location.pathname }} />
+    return <Navigate to={routes.welcome} replace state={{ from: location.pathname + location.search }} />
   }
 
   return <Outlet />
@@ -28,13 +28,14 @@ export function RequireAuth() {
 /** Keeps signed-in members out of the welcome, login and register screens. */
 export function RedirectIfAuthenticated() {
   const { status } = useAuth()
+  const location = useLocation()
 
   if (status === 'unknown') {
     return <PageLoader label="Checking your account…" />
   }
 
   if (status === 'authenticated') {
-    return <Navigate to={routes.home} replace />
+    return <Navigate to={returnPath(location.state)} replace />
   }
 
   return <Outlet />

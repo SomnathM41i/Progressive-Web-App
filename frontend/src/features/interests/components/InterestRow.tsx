@@ -1,7 +1,10 @@
 import { useState } from 'react'
 import type { ReactNode } from 'react'
+import { Link } from 'react-router-dom'
 
+import { profilePath } from '@/config/routes'
 import type { InterestEntry } from '@/features/interests/types'
+import { parseApiDate } from '@/features/profiles/dates'
 
 interface InterestRowProps {
   entry: InterestEntry
@@ -12,8 +15,8 @@ interface InterestRowProps {
 }
 
 function formatDate(value: string): string | null {
-  const date = new Date(value)
-  if (Number.isNaN(date.getTime())) return null
+  const date = parseApiDate(value)
+  if (!date) return null
   return date.toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })
 }
 
@@ -27,25 +30,36 @@ export function InterestRow({ entry, actions, meta }: InterestRowProps) {
 
   return (
     <li className="flex items-center gap-3.5 py-3.5">
-      {showPhoto ? (
-        <img
-          src={entry.photoUrl ?? undefined}
-          alt=""
-          loading="lazy"
-          onError={() => setPhotoFailed(true)}
-          className="h-32 w-24 shrink-0 rounded-2xl object-cover"
-        />
-      ) : (
-        <span
-          aria-hidden="true"
-          className="flex h-32 w-24 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-maroon to-maroon-dark text-2xl font-semibold text-white"
-        >
-          {entry.name.slice(0, 1)}
-        </span>
-      )}
+      <Link
+        to={profilePath(entry.id)}
+        state={{ profile: entry }}
+        aria-label={`View ${entry.name}'s profile`}
+        className="shrink-0"
+      >
+        {showPhoto ? (
+          <img
+            src={entry.photoUrl ?? undefined}
+            alt=""
+            loading="lazy"
+            onError={() => setPhotoFailed(true)}
+            className="h-32 w-24 shrink-0 rounded-2xl object-cover"
+          />
+        ) : (
+          <span
+            aria-hidden="true"
+            className="flex h-32 w-24 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-maroon to-maroon-dark text-2xl font-semibold text-white"
+          >
+            {entry.name.slice(0, 1)}
+          </span>
+        )}
+      </Link>
 
       <div className="min-w-0 flex-1">
-        <p className="truncate text-base font-semibold text-ink">{entry.name}</p>
+        <p className="truncate text-base font-semibold text-ink">
+          <Link to={profilePath(entry.id)} state={{ profile: entry }}>
+            {entry.name}
+          </Link>
+        </p>
         <p className="mt-1">
           <span className="inline-block rounded-full bg-rose px-2.5 py-0.5 text-xs font-semibold text-maroon">
             ID: {entry.id}

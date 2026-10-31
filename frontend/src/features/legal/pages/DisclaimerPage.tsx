@@ -4,7 +4,7 @@ export function DisclaimerPage() {
   return (
     <div className="flex h-dvh flex-col bg-cream">
       <ScreenHeader title="Disclaimer" />
-      <main className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 py-4 pb-safe">
+      <main tabIndex={0} className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 py-4 pb-safe">
         <div className="mx-auto max-w-lg space-y-4 rounded-2xl border border-line bg-white p-4 text-sm leading-relaxed text-ink">
           <section className="space-y-2">
             <h2 className="text-base font-semibold">Disclaimer</h2>

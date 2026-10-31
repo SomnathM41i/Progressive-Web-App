@@ -12,14 +12,16 @@ interface InfiniteProfileCarouselProps {
 
 export function InfiniteProfileCarousel({ type, gender, initialProfiles = [] }: InfiniteProfileCarouselProps) {
   const [profiles, setProfiles] = useState<ProfilePreview[]>(initialProfiles)
-  const [page, setPage] = useState(1)
+  // An empty rail (its first request failed) starts over from page 1.
+  const [page, setPage] = useState(initialProfiles.length ? 1 : 0)
   const [loading, setLoading] = useState(false)
   const [hasMore, setHasMore] = useState(true)
-  const sentinelRef = useRef<HTMLDivElement | null>(null)
+  const railRef = useRef<HTMLUListElement | null>(null)
+  const sentinelRef = useRef<HTMLLIElement | null>(null)
 
   useEffect(() => {
     setProfiles(initialProfiles)
-    setPage(1)
+    setPage(initialProfiles.length ? 1 : 0)
     setHasMore(true)
   }, [type, gender])
 
@@ -33,7 +35,8 @@ export function InfiniteProfileCarousel({ type, gender, initialProfiles = [] }: 
           loadMore()
         }
       },
-      { rootMargin: '200px' },
+      // Watched inside the rail: only sideways scrolling may fetch the next page.
+      { root: railRef.current, rootMargin: '0px 200px 0px 200px' },
     )
     observer.observe(el)
     return () => observer.disconnect()
@@ -69,15 +72,14 @@ export function InfiniteProfileCarousel({ type, gender, initialProfiles = [] }: 
 
   return (
     <div>
-      <ul className="-mx-4 flex snap-x snap-mandatory [scrollbar-width:none] gap-3 overflow-x-auto px-4 pb-1 [&::-webkit-scrollbar]:hidden">
+      <ul ref={railRef} className="-mx-4 flex snap-x snap-mandatory [scrollbar-width:none] gap-3 overflow-x-auto px-4 pb-1 [&::-webkit-scrollbar]:hidden">
         {profiles.map((profile) => (
           <li key={profile.id} className="w-40 shrink-0 snap-start">
             <ProfileCard profile={profile} />
           </li>
         ))}
-        <li className="w-1 shrink-0" aria-hidden="true" />
+        <li ref={sentinelRef} className="w-1 shrink-0" aria-hidden="true" />
       </ul>
-      <div ref={sentinelRef} className="h-1" />
     </div>
   )
 }

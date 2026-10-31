@@ -47,8 +47,13 @@ export function toApiError(error: unknown): ApiError {
 
   if (axios.isAxiosError(error)) {
     if (!error.response) {
+      const timedOut = error.code === 'ECONNABORTED' || error.code === 'ETIMEDOUT'
       return new ApiError({
-        message: 'You appear to be offline. Check your connection and retry.',
+        message: timedOut
+          ? 'The server took too long to respond. Please try again.'
+          : navigator.onLine
+            ? 'Could not reach the server. Please try again.'
+            : 'You appear to be offline. Check your connection and retry.',
         isNetworkError: true,
         code: error.code ?? null,
       })

@@ -17,6 +17,7 @@ import {
   heightLabel,
   WEIGHT_MAX,
   WEIGHT_MIN,
+  isValidMobile,
 } from '@/features/registration/constants'
 import { useRegistration } from '@/features/registration/hooks/useRegistration'
 import { masterDataService } from '@/features/registration/services/master-data.service'
@@ -429,7 +430,8 @@ export function BasicStepPage({ profileEdit = false, onSaved }: BasicStepPagePro
     if (!form.Height) next.Height = 'Select your height'
     if (!form.Weight) next.Weight = 'Select your weight'
     if (!form.Name.trim()) next.Name = 'Enter your full name'
-    else if (!/^[A-Za-z][A-Za-z ]*$/.test(form.Name.trim())) {
+    // Older profiles hold Marathi names; only a name being typed here is checked.
+    else if (dirty.current.has('Name') && !/^[A-Za-z][A-Za-z ]*$/.test(form.Name.trim())) {
       next.Name = 'Use letters only'
     }
     if (!form.DOB) next.DOB = 'Select your date of birth'
@@ -440,7 +442,7 @@ export function BasicStepPage({ profileEdit = false, onSaved }: BasicStepPagePro
     if (!form.maritalstatus) next.maritalstatus = 'Select marital status'
     if (form.maritalstatus && form.maritalstatus !== 'Unmarried') {
       if (!form.PE_HaveChildren) next.PE_HaveChildren = 'Select number of children'
-      if (!form.childrenlivingstatus) {
+      if (form.PE_HaveChildren !== 'none' && !form.childrenlivingstatus) {
         next.childrenlivingstatus = 'Select children status'
       }
     }
@@ -452,8 +454,8 @@ export function BasicStepPage({ profileEdit = false, onSaved }: BasicStepPagePro
       next.ConfirmEmail = 'Enter a valid email'
     }
     if (!form.Mobile.trim()) next.Mobile = 'Enter mobile number'
-    else if (!/^[0-9]{10}$/.test(form.Mobile.trim())) {
-      next.Mobile = 'Enter a 10-digit mobile number'
+    else if (dirty.current.has('Mobile') && !isValidMobile(form.Mobile, form.countrycode)) {
+      next.Mobile = 'Enter a valid mobile number'
     }
     if (!form.aboutus.trim()) next.aboutus = 'Add a short profile description'
     else if (
@@ -497,7 +499,7 @@ export function BasicStepPage({ profileEdit = false, onSaved }: BasicStepPagePro
       Profilecreatedby: form.Profilecreatedby, maritalstatus: form.maritalstatus,
       PE_HaveChildren: form.PE_HaveChildren || 'none',
       childrenlivingstatus:
-        form.maritalstatus === 'Unmarried'
+        form.maritalstatus === 'Unmarried' || form.PE_HaveChildren === 'none'
           ? ''
           : (form.childrenlivingstatus as BasicDetails['childrenlivingstatus']),
       religion: form.religion, caste: form.caste, subcaste: form.subcaste,
@@ -635,12 +637,14 @@ export function BasicStepPage({ profileEdit = false, onSaved }: BasicStepPagePro
                   CHILDREN_COUNT_OPTIONS,
                   'Select number of children',
                 )}
-                {select(
-                  'childrenlivingstatus',
-                  'Children status',
-                  CHILDREN_STATUS_SELECT_OPTIONS,
-                  'Select children status',
-                )}
+                {form.PE_HaveChildren !== 'none'
+                  ? select(
+                      'childrenlivingstatus',
+                      'Children status',
+                      CHILDREN_STATUS_SELECT_OPTIONS,
+                      'Select children status',
+                    )
+                  : null}
               </>
             ) : null}
           </div>
@@ -694,7 +698,7 @@ export function BasicStepPage({ profileEdit = false, onSaved }: BasicStepPagePro
               inputMode="numeric"
               value={form.Mobile}
               onChange={(event) => update('Mobile', event.target.value)}
-              maxLength={10}
+              maxLength={15}
               error={errors.Mobile}
               autoComplete="tel-national"
               required

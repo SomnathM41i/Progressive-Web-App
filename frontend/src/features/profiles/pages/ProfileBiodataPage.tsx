@@ -32,9 +32,12 @@ export function ProfileBiodataPage() {
   function openBiodata() {
     const url = biodata.url
     if (!url) return
-    const opened = window.open(url, '_blank', 'noopener')
-    // A blocked popup returns null; tell the member so the tap is not lost.
-    if (!opened) {
+    // Not the 'noopener' feature: with it window.open always returns null, which
+    // would look like a blocked popup.
+    const opened = window.open(url, '_blank')
+    if (opened) {
+      opened.opener = null
+    } else {
       toast.info(`Allow pop-ups to open the biodata, or visit ${url}`)
     }
   }
@@ -72,6 +75,7 @@ export function ProfileBiodataPage() {
           <input
             ref={fileInputRef}
             type="file"
+            aria-label="Choose biodata file"
             accept="application/pdf,image/*"
             onChange={(event) => setFile(event.target.files?.[0] ?? null)}
             className="block w-full text-sm text-ink file:mr-3 file:rounded-full file:border-0 file:bg-rose file:px-3 file:py-2 file:text-xs file:font-semibold file:text-maroon"

@@ -44,6 +44,14 @@ export const HEIGHT_CODES: readonly string[] = Array.from({ length: 37 }, (_, in
   String(index + 1),
 )
 
+/** India's id in `get-country-list.php`. */
+export const INDIA_COUNTRY_ID = '99'
+
+/** Indian numbers have 10 digits; other countries vary, so only the range is checked. */
+export function isValidMobile(value: string, countryId: string): boolean {
+  return (countryId === INDIA_COUNTRY_ID ? /^[0-9]{10}$/ : /^[0-9]{6,15}$/).test(value.trim())
+}
+
 export const WEIGHT_MIN = 40
 export const WEIGHT_MAX = 150
 

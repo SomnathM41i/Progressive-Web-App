@@ -95,6 +95,17 @@ function field(
   }
 }
 
+/** Prefers the API's formatted label over its raw amount, e.g. `5 Lakh`. */
+function labelledField(
+  record: ProfileApiRecord,
+  label: string,
+  labelKey: string,
+  keys: string[],
+): ProfileField {
+  const formatted = field(record, label, [labelKey])
+  return formatted.value ? formatted : field(record, label, keys)
+}
+
 /**
  * Extracts the payload object from a response body, unwrapping one nested level
  * when the data lives behind a known key (`{ data: { ... } }`).
@@ -212,7 +223,7 @@ function mapEducation(record: ProfileApiRecord): ProfileSection {
     fields: [
       field(record, 'Education', ['Education', 'education']),
       field(record, 'Institute', ['Institute', 'instu', 'InstituteName']),
-      field(record, 'Annual income', ['Annualincome', 'AnnualIncome', 'annual_income']),
+      labelledField(record, 'Annual income', 'AnnualincomeLabel', ['Annualincome', 'AnnualIncome', 'annual_income']),
       field(record, 'Monthly income', ['Month_income', 'MonthlyIncome']),
       field(record, 'Occupation', ['Occupation', 'occupation']),
       field(record, 'Employed in', ['Employedin', 'employedin']),
@@ -295,8 +306,8 @@ function mapPartnerPreference(record: ProfileApiRecord): ProfileSection {
       field(record, 'Residence status', ['ResidenceStatus', 'rstatus1']),
       field(record, 'Country', ['Country', 'country1']),
       field(record, 'State', ['State', 'state1']),
-      field(record, 'Income from', ['IncomeFrom', 'income_from']),
-      field(record, 'Income to', ['IncomeTo', 'income_to']),
+      labelledField(record, 'Income from', 'IncomeFromLabel', ['IncomeFrom', 'income_from']),
+      labelledField(record, 'Income to', 'IncomeToLabel', ['IncomeTo', 'income_to']),
     ],
     notes: [field(record, 'Expectation', ['Expectation', 'expectation'])],
   }

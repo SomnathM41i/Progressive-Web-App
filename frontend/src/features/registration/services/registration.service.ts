@@ -98,9 +98,12 @@ async function postForm(
   values: object,
   fallbackMessage: string,
 ): Promise<RegistrationEnvelope<unknown>> {
+  // A file can outlast the default timeout on a mobile connection.
+  const hasFile = Object.values(values).some((value) => value instanceof Blob)
   const { data } = await api.post<RegistrationEnvelope<unknown>>(
     path,
     createRegistrationFormData(values),
+    hasFile ? { timeout: 60000 } : undefined,
   )
 
   ensureJsonBody(data)

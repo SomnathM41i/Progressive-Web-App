@@ -3,7 +3,6 @@ import { useLocation, Outlet } from 'react-router-dom'
 import { ErrorBoundary } from '@/app/ErrorBoundary'
 import { BottomNavigation } from '@/components/navigation/BottomNavigation'
 import { AppHeader } from '@/components/navigation/AppHeader'
-import { PwaUpdatePrompt } from '@/components/feedback/PwaUpdatePrompt'
 import { routes } from '@/config/routes'
 
 /**
@@ -53,7 +52,6 @@ export function AppLayout() {
       </main>
 
       {!isFullScreenScreen ? <BottomNavigation /> : null}
-      <PwaUpdatePrompt />
     </div>
   )
 }

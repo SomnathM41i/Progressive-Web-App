@@ -38,7 +38,12 @@ function readMessage(body: UploadEnvelope): string | null {
 
 const MAX_UPLOAD_BYTES = 5 * 1024 * 1024
 
-function validateFile(file: File, allowed: string[]): void {
+export const HOROSCOPE_FILE_TYPES = ['pdf', 'image/']
+
+export function validateFile(file: File, allowed: string[]): void {
+  if (file.size === 0) {
+    throw new ApiError({ message: 'This file is empty. Please choose another file.' })
+  }
   if (file.size > MAX_UPLOAD_BYTES) {
     throw new ApiError({ message: 'File is too large. Maximum size is 5 MB.' })
   }

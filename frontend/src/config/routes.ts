@@ -41,6 +41,12 @@ export const routes = {
 
 export type RoutePath = (typeof routes)[keyof typeof routes]
 
+/** Where to go after signing in, from the `from` a guard left in router state. */
+export function returnPath(state: unknown): string {
+  const from = (state as { from?: unknown } | null)?.from
+  return typeof from === 'string' && from.startsWith('/') ? from : routes.home
+}
+
 /** Builds a concrete profile-detail path from a profile id. */
 export function profilePath(profileId: string): string {
   return `/profiles/${encodeURIComponent(profileId)}`

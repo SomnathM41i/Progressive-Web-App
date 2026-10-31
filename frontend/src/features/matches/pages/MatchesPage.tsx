@@ -23,6 +23,7 @@ export function MatchesPage() {
   const [reloadNonce, setReloadNonce] = useState(0)
   const [page, setPage] = useState(1)
   const [hasMore, setHasMore] = useState(true)
+  const [moreError, setMoreError] = useState<string | null>(null)
   const sentinelRef = useRef<HTMLDivElement | null>(null)
 
   useEffect(() => {
@@ -36,6 +37,7 @@ export function MatchesPage() {
     setMatches([])
     setPage(1)
     setHasMore(true)
+    setMoreError(null)
 
     matchesService
       .fetchMutualMatches(profileId, 1, 12)
@@ -90,8 +92,9 @@ export function MatchesPage() {
       } else if (p && p.has_next === false) {
         setHasMore(false)
       }
-    } catch {
-      setHasMore(false)
+    } catch (err) {
+      // Stops the observer until the member retries; loaded pages stay on screen.
+      setMoreError(err instanceof Error ? err.message : 'Could not load more matches')
     } finally {
       setLoadingMore(false)
     }
@@ -99,7 +102,7 @@ export function MatchesPage() {
 
   useEffect(() => {
     const el = sentinelRef.current
-    if (!el || !hasMore) return
+    if (!el || !hasMore || moreError) return
     const observer = new IntersectionObserver(
       (entries) => {
         if (entries[0]?.isIntersecting) {
@@ -110,7 +113,7 @@ export function MatchesPage() {
     )
     observer.observe(el)
     return () => observer.disconnect()
-  }, [hasMore, loadMore])
+  }, [hasMore, moreError, loadMore])
 
   const retry = useCallback(() => setReloadNonce((value) => value + 1), [])
 
@@ -147,6 +150,20 @@ export function MatchesPage() {
             {loadingMore ? (
               <div className="flex items-center justify-center py-3">
                 <Spinner className="size-5" />
+              </div>
+            ) : null}
+            {moreError ? (
+              <div className="flex flex-col items-center gap-2 py-3">
+                <p role="alert" className="text-xs text-danger">
+                  {moreError}
+                </p>
+                <button
+                  type="button"
+                  onClick={() => setMoreError(null)}
+                  className="rounded-full border border-line-strong px-6 py-2.5 text-sm font-semibold text-maroon hover:bg-rose"
+                >
+                  Retry
+                </button>
               </div>
             ) : null}
             <div ref={sentinelRef} className="h-1" />

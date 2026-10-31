@@ -21,8 +21,10 @@ import {
   DEFAULT_TERMS_ACCEPTED,
   FIXED_REGNO,
   FIXED_RELATION_ID,
+  INDIA_COUNTRY_ID,
   NO_OF_CHILDREN_OPTIONS,
   PROFILE_LOCATION_TYPES,
+  isValidMobile,
 } from '@/features/registration/constants'
 import { useRegistration } from '@/features/registration/hooks/useRegistration'
 import { masterDataService } from '@/features/registration/services/master-data.service'
@@ -413,7 +415,9 @@ export function AccountStepPage() {
     if (!form.maritalstatus.trim()) next.maritalstatus = 'Select marital status'
     if (form.maritalstatus && form.maritalstatus !== 'Unmarried') {
       if (!form.noofchildren.trim()) next.noofchildren = 'Select number of children'
-      if (!form.childrenstatus.trim()) next.childrenstatus = 'Select children status'
+      if (form.noofchildren !== 'None' && !form.childrenstatus.trim()) {
+        next.childrenstatus = 'Select children status'
+      }
       if (!form.child_acceptance.trim()) {
         next.child_acceptance = 'Select child acceptance'
       }
@@ -422,8 +426,11 @@ export function AccountStepPage() {
     if (!form.caste.trim()) next.caste = 'Select caste'
     if (!form.countrycode.trim()) next.countrycode = 'Select country code'
     if (!form.mobile.trim()) next.mobile = 'Enter mobile number'
-    else if (!/^[0-9]{10}$/.test(form.mobile.trim())) {
-      next.mobile = 'Enter a 10-digit mobile number'
+    else if (!isValidMobile(form.mobile, form.countrycode)) {
+      next.mobile =
+        form.countrycode === INDIA_COUNTRY_ID
+          ? 'Enter a 10-digit mobile number'
+          : 'Enter a valid mobile number'
     }
     if (!form.aboutus.trim()) next.aboutus = 'Add a short profile description'
     else if (form.aboutus.trim().length < 20) {
@@ -459,7 +466,7 @@ export function AccountStepPage() {
       maritalstatus: form.maritalstatus,
       noofchildren: form.noofchildren as RegistrationAccount['noofchildren'],
       childrenstatus:
-        form.maritalstatus === 'Unmarried'
+        form.maritalstatus === 'Unmarried' || form.noofchildren === 'None'
           ? ''
           : (form.childrenstatus as RegistrationAccount['childrenstatus']),
       child_acceptance:
@@ -633,15 +640,17 @@ export function AccountStepPage() {
                   error={errors.noofchildren}
                   required
                 />
-                <SelectField
-                  label="Children status"
-                  value={form.childrenstatus}
-                  onChange={(event) => update('childrenstatus', event.target.value)}
-                  options={CHILDREN_STATUS_SELECT_OPTIONS}
-                  error={errors.childrenstatus}
-                  placeholder="Select children status"
-                  required
-                />
+                {form.noofchildren !== 'None' ? (
+                  <SelectField
+                    label="Children status"
+                    value={form.childrenstatus}
+                    onChange={(event) => update('childrenstatus', event.target.value)}
+                    options={CHILDREN_STATUS_SELECT_OPTIONS}
+                    error={errors.childrenstatus}
+                    placeholder="Select children status"
+                    required
+                  />
+                ) : null}
               </div>
               <SelectField
                 label="Child acceptance"
@@ -716,7 +725,7 @@ export function AccountStepPage() {
               label="Mobile number"
               value={form.mobile}
               onChange={(event) =>
-                update('mobile', event.target.value.replace(/\D/g, '').slice(0, 10))
+                update('mobile', event.target.value.replace(/\D/g, '').slice(0, 15))
               }
               error={errors.mobile}
               inputMode="numeric"

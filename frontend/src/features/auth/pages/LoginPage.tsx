@@ -1,13 +1,13 @@
 import { ChevronLeft, Lock, Phone } from 'lucide-react'
 import { useState } from 'react'
 import type { FormEvent } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link, useLocation, useNavigate } from 'react-router-dom'
 
 import loginBackground from '@/assets/images/splash-background.webp'
 import { Button } from '@/components/ui/Button'
 import { Spinner } from '@/components/loading/Spinner'
 import { TextField } from '@/components/ui/TextField'
-import { routes } from '@/config/routes'
+import { returnPath, routes } from '@/config/routes'
 import { useAuth } from '@/features/auth/hooks/useAuth'
 import { useToast } from '@/hooks/useToast'
 import { toApiError } from '@/services/api-error'
@@ -16,6 +16,7 @@ export function LoginPage() {
   const { login } = useAuth()
   const toast = useToast()
   const navigate = useNavigate()
+  const location = useLocation()
 
   const [identifier, setIdentifier] = useState('')
   const [password, setPassword] = useState('')
@@ -28,7 +29,7 @@ export function LoginPage() {
     try {
       await login({ identifier, password })
       toast.success('Logged in successfully')
-      void navigate(routes.home, { replace: true })
+      void navigate(returnPath(location.state), { replace: true })
     } catch (error) {
       const apiError = toApiError(error)
       toast.error('Could not log in', { description: apiError.message })

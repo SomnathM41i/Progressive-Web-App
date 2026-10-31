@@ -1,5 +1,5 @@
 import { ArrowRight, Heart, ShieldCheck, Users } from 'lucide-react'
-import { useNavigate } from 'react-router-dom'
+import { useLocation, useNavigate } from 'react-router-dom'
 
 import logo from '@/assets/images/shivraj-logo.png'
 import { Button } from '@/components/ui/Button'
@@ -7,6 +7,7 @@ import { routes } from '@/config/routes'
 
 export function WelcomePage() {
   const navigate = useNavigate()
+  const location = useLocation()
   return (
     <div className="welcome-screen flex flex-1 flex-col px-6 pt-safe pb-safe">
       <div className="relative flex flex-1 flex-col items-center justify-center py-8 text-center">
@@ -60,7 +61,7 @@ export function WelcomePage() {
           fullWidth
           size="lg"
           variant="outline"
-          onClick={() => void navigate(routes.login)}
+          onClick={() => void navigate(routes.login, { state: location.state })}
         >
           Log in
         </Button>

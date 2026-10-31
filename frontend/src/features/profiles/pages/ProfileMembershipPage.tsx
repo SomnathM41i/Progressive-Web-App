@@ -6,6 +6,7 @@ import { Card } from '@/components/ui/Card'
 import { SectionHeading } from '@/components/ui/SectionHeading'
 import { DetailRow } from '@/features/profiles/components/DetailRow'
 import { SectionState } from '@/features/profiles/components/SectionState'
+import { planTitle } from '@/features/membership/format'
 import { formatApiDate, membershipStatus } from '@/features/profiles/dates'
 import { useProfileResource } from '@/features/profiles/hooks/useProfileResource'
 import { profileService } from '@/features/profiles/services/profile.service'
@@ -43,7 +44,7 @@ export function ProfileMembershipPage() {
             </span>
             <div className="min-w-0">
               <p className="truncate text-base font-semibold text-ink">
-                {plan.planName ?? 'Membership plan'}
+                {plan.planName ? planTitle(plan.planName) : 'Membership plan'}
               </p>
               {plan.expiryDate ? (
                 <p className="mt-0.5 text-xs text-muted">

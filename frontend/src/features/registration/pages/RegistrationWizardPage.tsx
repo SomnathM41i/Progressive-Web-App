@@ -123,12 +123,15 @@ function RegistrationWizard() {
 
   const stepIndex = steps.indexOf(step)
   const previous = previousRegistrationStep(step, profileLocationType)
+  // The account step cannot be reopened once created, so it is not a back target.
   const backPath =
     step === 'account'
       ? routes.welcome
-      : previous
-        ? registrationStepPath(previous)
-        : routes.welcome
+      : previous === 'account'
+        ? routes.home
+        : previous
+          ? registrationStepPath(previous)
+          : routes.welcome
 
   return (
     <div className="registration-screen flex min-h-dvh flex-1 flex-col pt-safe pb-safe">
